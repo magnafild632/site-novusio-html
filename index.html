@@ -1,447 +1,715 @@
-  <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
-    <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Novusio - Soluciones Digitales Innovadoras</title>
-    <meta name="description" content="Somos una empresa especializada en soluciones digitales innovadoras. Chatbots con IA, desarrollo de sistemas, seguridad cibernética y sitios web.">
-    <link rel="stylesheet" href="styles.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    </head>
-<body>
+    <meta
+      name="description"
+      content="Somos una empresa especializada en soluciones digitales innovadoras. Chatbots con IA, desarrollo de sistemas, seguridad cibernética y sitios web."
+    />
+    <link
+      rel="icon"
+      type="image/svg+xml"
+      href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='15' fill='%230d9488'/><text x='50' y='70' font-size='60' font-weight='bold' text-anchor='middle' fill='white' font-family='Inter, sans-serif'>N</text></svg>"
+    />
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
     <!-- Navigation -->
     <nav class="navbar">
-        <div class="nav-container">
-            <div class="nav-brand">
-                <div class="logo">
-                    <span class="logo-text">N</span>
-                </div>
-                <span class="company-name">NOVUSIO</span>
-            </div>
-            
-            <div class="nav-menu" id="navMenu">
-                <a href="#inicio" class="nav-link">Inicio</a>
-                <a href="#servicios" class="nav-link">Servicios</a>
-                <a href="#portafolio" class="nav-link">Portafolio</a>
-                <a href="#nosotros" class="nav-link">Nosotros</a>
-                <a href="#contacto" class="nav-link">Contacto</a>
-            </div>
-            
-            <button class="mobile-menu-btn" id="mobileMenuBtn">
-                <span class="hamburger"></span>
-                <span class="hamburger"></span>
-                <span class="hamburger"></span>
-            </button>
+      <div class="nav-container">
+        <div class="nav-brand">
+          <div class="logo">
+            <span class="logo-text">N</span>
+          </div>
+          <span class="company-name">NOVUSIO</span>
         </div>
+
+        <div class="nav-menu" id="navMenu">
+          <a href="#inicio" class="nav-link">Inicio</a>
+          <a href="#servicios" class="nav-link">Servicios</a>
+          <a href="#portafolio" class="nav-link">Portafolio</a>
+          <a href="#nosotros" class="nav-link">Nosotros</a>
+          <a href="#contacto" class="nav-link">Contacto</a>
+        </div>
+
+        <button class="mobile-menu-btn" id="mobileMenuBtn">
+          <span class="hamburger"></span>
+          <span class="hamburger"></span>
+          <span class="hamburger"></span>
+        </button>
+      </div>
     </nav>
 
     <!-- Hero Section -->
     <section id="inicio" class="hero">
-        <div class="hero-carousel">
-            <div class="hero-slide active">
-                <div class="hero-overlay"></div>
-                <img src="https://images.unsplash.com/photo-1531746790731-6c087fecd65a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxjaGF0Ym90JTIwYXJ0aWZpY2lhbCUyMGludGVsbGlnZW5jZXxlbnwxfHx8fDE3NTk5NDg5OTd8MA&ixlib=rb-4.1.0&q=80&w=1080" alt="Chatbots Inteligentes" class="hero-image">
-                <div class="hero-content">
-                    <h1 class="hero-title">Chatbots Inteligentes</h1>
-                    <p class="hero-subtitle">Automatiza tu atención al cliente 24/7 con IA avanzada</p>
-                </div>
-            </div>
-            
-            <div class="hero-slide">
-                <div class="hero-overlay"></div>
-                <img src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxzb2Z0d2FyZSUyMGRldmVsb3BtZW50JTIwZGFzaGJvYXJkfGVufDF8fHx8MTc1OTk0OTAxNHww&ixlib=rb-4.1.0&q=80&w=1080" alt="Desarrollo de Sistemas" class="hero-image">
-                <div class="hero-content">
-                    <h1 class="hero-title">Desarrollo de Sistemas</h1>
-                    <p class="hero-subtitle">Soluciones personalizadas para tu empresa</p>
-                </div>
-            </div>
-            
-            <div class="hero-slide">
-                <div class="hero-overlay"></div>
-                <img src="https://images.unsplash.com/photo-1550751827-4bd374c3f58b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxjeWJlcnNlY3VyaXR5JTIwbmV0d29ya3xlbnwxfHx8fDE3NTk5NDkwMzN8MA&ixlib=rb-4.1.0&q=80&w=1080" alt="Seguridad Cibernética" class="hero-image">
-                <div class="hero-content">
-                    <h1 class="hero-title">Seguridad Cibernética</h1>
-                    <p class="hero-subtitle">Protege tu negocio de amenazas digitales</p>
-                </div>
-            </div>
-            
-            <div class="hero-slide">
-                <div class="hero-overlay"></div>
-                <img src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxlY29tbWVyY2UlMjB3ZWJzaXRlJTIwZGVzaWdufGVufDF8fHx8MTc1OTk0OTA1MXww&ixlib=rb-4.1.0&q=80&w=1080" alt="Sitios Web & E-commerce" class="hero-image">
-                <div class="hero-content">
-                    <h1 class="hero-title">Sitios Web & E-commerce</h1>
-                    <p class="hero-subtitle">Impulsa tu presencia digital</p>
-                </div>
-            </div>
+      <div class="hero-carousel">
+        <div class="hero-slide active">
+          <div class="hero-overlay"></div>
+          <img
+            src="https://images.unsplash.com/photo-1531746790731-6c087fecd65a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxjaGF0Ym90JTIwYXJ0aWZpY2lhbCUyMGludGVsbGlnZW5jZXxlbnwxfHx8fDE3NTk5NDg5OTd8MA&ixlib=rb-4.1.0&q=80&w=1080"
+            alt="Chatbots Inteligentes"
+            class="hero-image"
+          />
+          <div class="hero-content">
+            <h1 class="hero-title">Chatbots Inteligentes</h1>
+            <p class="hero-subtitle">
+              Automatiza tu atención al cliente 24/7 con IA avanzada
+            </p>
+          </div>
         </div>
-        
-        <!-- Navigation Arrows -->
-        <button class="hero-nav hero-nav-prev" id="prevSlide">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <polyline points="15,18 9,12 15,6"></polyline>
-            </svg>
-        </button>
-        <button class="hero-nav hero-nav-next" id="nextSlide">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <polyline points="9,18 15,12 9,6"></polyline>
-            </svg>
-        </button>
-        
-        <!-- Dots Indicator -->
-        <div class="hero-dots">
-            <button class="hero-dot active" data-slide="0"></button>
-            <button class="hero-dot" data-slide="1"></button>
-            <button class="hero-dot" data-slide="2"></button>
-            <button class="hero-dot" data-slide="3"></button>
+
+        <div class="hero-slide">
+          <div class="hero-overlay"></div>
+          <img
+            src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxzb2Z0d2FyZSUyMGRldmVsb3BtZW50JTIwZGFzaGJvYXJkfGVufDF8fHx8MTc1OTk0OTAxNHww&ixlib=rb-4.1.0&q=80&w=1080"
+            alt="Desarrollo de Sistemas"
+            class="hero-image"
+          />
+          <div class="hero-content">
+            <h1 class="hero-title">Desarrollo de Sistemas</h1>
+            <p class="hero-subtitle">
+              Soluciones personalizadas para tu empresa
+            </p>
+          </div>
         </div>
+
+        <div class="hero-slide">
+          <div class="hero-overlay"></div>
+          <img
+            src="https://images.unsplash.com/photo-1550751827-4bd374c3f58b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxjeWJlcnNlY3VyaXR5JTIwbmV0d29ya3xlbnwxfHx8fDE3NTk5NDkwMzN8MA&ixlib=rb-4.1.0&q=80&w=1080"
+            alt="Seguridad Cibernética"
+            class="hero-image"
+          />
+          <div class="hero-content">
+            <h1 class="hero-title">Seguridad Cibernética</h1>
+            <p class="hero-subtitle">
+              Protege tu negocio de amenazas digitales
+            </p>
+          </div>
+        </div>
+
+        <div class="hero-slide">
+          <div class="hero-overlay"></div>
+          <img
+            src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxlY29tbWVyY2UlMjB3ZWJzaXRlJTIwZGVzaWdufGVufDF8fHx8MTc1OTk0OTA1MXww&ixlib=rb-4.1.0&q=80&w=1080"
+            alt="Sitios Web & E-commerce"
+            class="hero-image"
+          />
+          <div class="hero-content">
+            <h1 class="hero-title">Sitios Web & E-commerce</h1>
+            <p class="hero-subtitle">Impulsa tu presencia digital</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Navigation Arrows -->
+      <button class="hero-nav hero-nav-prev" id="prevSlide">
+        <svg
+          width="20"
+          height="20"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <polyline points="15,18 9,12 15,6"></polyline>
+        </svg>
+      </button>
+      <button class="hero-nav hero-nav-next" id="nextSlide">
+        <svg
+          width="20"
+          height="20"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <polyline points="9,18 15,12 9,6"></polyline>
+        </svg>
+      </button>
+
+      <!-- Dots Indicator -->
+      <div class="hero-dots">
+        <button class="hero-dot active" data-slide="0"></button>
+        <button class="hero-dot" data-slide="1"></button>
+        <button class="hero-dot" data-slide="2"></button>
+        <button class="hero-dot" data-slide="3"></button>
+      </div>
     </section>
 
     <!-- Services Section -->
     <section id="servicios" class="services">
-        <div class="container">
-            <div class="section-header">
-                <h2 class="section-title">Nuestras Soluciones</h2>
-                <p class="section-subtitle">Ofrecemos soluciones tecnológicas completas para llevar tu negocio al siguiente nivel digital</p>
-            </div>
-            
-            <div class="services-grid">
-                <div class="service-card">
-                    <div class="service-icon">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-                        </svg>
-                    </div>
-                    <h3 class="service-title">Chatbots con IA</h3>
-                    <p class="service-description">Desarrollamos chatbots inteligentes que automatizan tu atención al cliente.</p>
-                    <ul class="service-features">
-                        <li>Respuestas automáticas 24/7</li>
-                        <li>Integración con WhatsApp</li>
-                        <li>IA conversacional avanzada</li>
-                        <li>Análisis de conversaciones</li>
-                    </ul>
-                </div>
-                
-                <div class="service-card">
-                    <div class="service-icon">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <polyline points="16,18 22,12 16,6"></polyline>
-                            <polyline points="8,6 2,12 8,18"></polyline>
-                        </svg>
-                    </div>
-                    <h3 class="service-title">Desarrollo de Sistemas</h3>
-                    <p class="service-description">Creamos sistemas personalizados para optimizar tus procesos de negocio.</p>
-                    <ul class="service-features">
-                        <li>Software a medida</li>
-                        <li>Integración de APIs</li>
-                        <li>Arquitectura escalable</li>
-                        <li>Soporte técnico continuo</li>
-                    </ul>
-                </div>
-                
-                <div class="service-card">
-                    <div class="service-icon">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-                        </svg>
-                    </div>
-                    <h3 class="service-title">Seguridad Cibernética</h3>
-                    <p class="service-description">Protegemos tu información con las mejores prácticas de seguridad.</p>
-                    <ul class="service-features">
-                        <li>Auditorías de seguridad</li>
-                        <li>Protección de datos</li>
-                        <li>Certificados SSL</li>
-                        <li>Monitoreo continuo</li>
-                    </ul>
-                </div>
-                
-                <div class="service-card">
-                    <div class="service-icon">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <circle cx="12" cy="12" r="10"></circle>
-                            <line x1="2" y1="12" x2="22" y2="12"></line>
-                            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
-                        </svg>
-                    </div>
-                    <h3 class="service-title">Sitios Web & E-commerce</h3>
-                    <p class="service-description">Diseñamos y desarrollamos sitios web modernos y tiendas online.</p>
-                    <ul class="service-features">
-                        <li>Diseño responsive</li>
-                        <li>SEO optimizado</li>
-                        <li>Pasarelas de pago</li>
-                        <li>Panel administrativo</li>
-                    </ul>
-                </div>
-            </div>
+      <div class="container">
+        <div class="section-header">
+          <h2 class="section-title">Nuestras Soluciones</h2>
+          <p class="section-subtitle">
+            Ofrecemos soluciones tecnológicas completas para llevar tu negocio
+            al siguiente nivel digital
+          </p>
         </div>
+
+        <div class="services-grid">
+          <div class="service-card">
+            <div class="service-icon">
+              <svg
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path
+                  d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"
+                ></path>
+              </svg>
+            </div>
+            <h3 class="service-title">Chatbots con IA</h3>
+            <p class="service-description">
+              Desarrollamos chatbots inteligentes que automatizan tu atención al
+              cliente.
+            </p>
+            <ul class="service-features">
+              <li>Respuestas automáticas 24/7</li>
+              <li>Integración con WhatsApp</li>
+              <li>IA conversacional avanzada</li>
+              <li>Análisis de conversaciones</li>
+            </ul>
+          </div>
+
+          <div class="service-card">
+            <div class="service-icon">
+              <svg
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <polyline points="16,18 22,12 16,6"></polyline>
+                <polyline points="8,6 2,12 8,18"></polyline>
+              </svg>
+            </div>
+            <h3 class="service-title">Desarrollo de Sistemas</h3>
+            <p class="service-description">
+              Creamos sistemas personalizados para optimizar tus procesos de
+              negocio.
+            </p>
+            <ul class="service-features">
+              <li>Software a medida</li>
+              <li>Integración de APIs</li>
+              <li>Arquitectura escalable</li>
+              <li>Soporte técnico continuo</li>
+            </ul>
+          </div>
+
+          <div class="service-card">
+            <div class="service-icon">
+              <svg
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+              </svg>
+            </div>
+            <h3 class="service-title">Seguridad Cibernética</h3>
+            <p class="service-description">
+              Protegemos tu información con las mejores prácticas de seguridad.
+            </p>
+            <ul class="service-features">
+              <li>Auditorías de seguridad</li>
+              <li>Protección de datos</li>
+              <li>Certificados SSL</li>
+              <li>Monitoreo continuo</li>
+            </ul>
+          </div>
+
+          <div class="service-card">
+            <div class="service-icon">
+              <svg
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="2" y1="12" x2="22" y2="12"></line>
+                <path
+                  d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"
+                ></path>
+              </svg>
+            </div>
+            <h3 class="service-title">Sitios Web & E-commerce</h3>
+            <p class="service-description">
+              Diseñamos y desarrollamos sitios web modernos y tiendas online.
+            </p>
+            <ul class="service-features">
+              <li>Diseño responsive</li>
+              <li>SEO optimizado</li>
+              <li>Pasarelas de pago</li>
+              <li>Panel administrativo</li>
+            </ul>
+          </div>
+        </div>
+      </div>
     </section>
 
     <!-- Portfolio Section -->
     <section id="portafolio" class="portfolio">
-        <div class="container">
-            <div class="section-header">
-                <h2 class="section-title">Nuestros Clientes</h2>
-                <p class="section-subtitle">Empresas que confían en nuestras soluciones digitales</p>
-            </div>
-            
-            <div class="portfolio-grid">
-                <div class="portfolio-item">
-                    <img src="https://images.unsplash.com/photo-1622465911368-72162f8da3e2?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxjb21wYW55JTIwbG9nbyUyMGJyYW5kfGVufDF8fHx8MTc1OTg2MTk5M3ww&ixlib=rb-4.1.0&q=80&w=1080" alt="Cliente 1" class="portfolio-logo">
-                </div>
-                <div class="portfolio-item">
-                    <img src="https://images.unsplash.com/photo-1661347998423-b15d37d6f61e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHx0ZWNoJTIwY29tcGFueSUyMGxvZ298ZW58MXx8fHwxNzU5OTIxMjc1fDA&ixlib=rb-4.1.0&q=80&w=1080" alt="Cliente 2" class="portfolio-logo">
-                </div>
-                <div class="portfolio-item">
-                    <img src="https://images.unsplash.com/photo-1622465911368-72162f8da3e2?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxidXNpbmVzcyUyMGJyYW5kJTIwbG9nb3xlbnwxfHx8fDE3NTk5MTczODJ8MA&ixlib=rb-4.1.0&q=80&w=1080" alt="Cliente 3" class="portfolio-logo">
-                </div>
-                <div class="portfolio-item">
-                    <img src="https://images.unsplash.com/photo-1731012189558-c2d035998542?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxjb3Jwb3JhdGUlMjBsb2dvJTIwZGVzaWdufGVufDF8fHx8MTc1OTg4OTgwNXww&ixlib=rb-4.1.0&q=80&w=1080" alt="Cliente 4" class="portfolio-logo">
-                </div>
-                <div class="portfolio-item">
-                    <img src="https://images.unsplash.com/photo-1590102426028-bf1ed6b354f5?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxzdGFydHVwJTIwbG9nbyUyMGJyYW5kfGVufDF8fHx8MTc1OTk0OTk4OHww&ixlib=rb-4.1.0&q=80&w=1080" alt="Cliente 5" class="portfolio-logo">
-                </div>
-                <div class="portfolio-item">
-                    <img src="https://images.unsplash.com/photo-1595409583957-5d1ec5869de9?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxkaWdpdGFsJTIwYWdlbmN5JTIwbG9nb3xlbnwxfHx8fDE3NTk5MTQ4MzV8MA&ixlib=rb-4.1.0&q=80&w=1080" alt="Cliente 6" class="portfolio-logo">
-                </div>
-            </div>
+      <div class="container">
+        <div class="section-header">
+          <h2 class="section-title">Nuestros Clientes</h2>
+          <p class="section-subtitle">
+            Empresas que confían en nuestras soluciones digitales
+          </p>
         </div>
+
+        <div class="portfolio-grid">
+          <div class="portfolio-item">
+            <img
+              src="https://images.unsplash.com/photo-1622465911368-72162f8da3e2?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxjb21wYW55JTIwbG9nbyUyMGJyYW5kfGVufDF8fHx8MTc1OTg2MTk5M3ww&ixlib=rb-4.1.0&q=80&w=1080"
+              alt="Cliente 1"
+              class="portfolio-logo"
+            />
+          </div>
+          <div class="portfolio-item">
+            <img
+              src="https://images.unsplash.com/photo-1661347998423-b15d37d6f61e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHx0ZWNoJTIwY29tcGFueSUyMGxvZ298ZW58MXx8fHwxNzU5OTIxMjc1fDA&ixlib=rb-4.1.0&q=80&w=1080"
+              alt="Cliente 2"
+              class="portfolio-logo"
+            />
+          </div>
+          <div class="portfolio-item">
+            <img
+              src="https://images.unsplash.com/photo-1622465911368-72162f8da3e2?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxidXNpbmVzcyUyMGJyYW5kJTIwbG9nb3xlbnwxfHx8fDE3NTk5MTczODJ8MA&ixlib=rb-4.1.0&q=80&w=1080"
+              alt="Cliente 3"
+              class="portfolio-logo"
+            />
+          </div>
+          <div class="portfolio-item">
+            <img
+              src="https://images.unsplash.com/photo-1731012189558-c2d035998542?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxjb3Jwb3JhdGUlMjBsb2dvJTIwZGVzaWdufGVufDF8fHx8MTc1OTg4OTgwNXww&ixlib=rb-4.1.0&q=80&w=1080"
+              alt="Cliente 4"
+              class="portfolio-logo"
+            />
+          </div>
+          <div class="portfolio-item">
+            <img
+              src="https://images.unsplash.com/photo-1590102426028-bf1ed6b354f5?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxzdGFydHVwJTIwbG9nbyUyMGJyYW5kfGVufDF8fHx8MTc1OTk0OTk4OHww&ixlib=rb-4.1.0&q=80&w=1080"
+              alt="Cliente 5"
+              class="portfolio-logo"
+            />
+          </div>
+          <div class="portfolio-item">
+            <img
+              src="https://images.unsplash.com/photo-1595409583957-5d1ec5869de9?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxkaWdpdGFsJTIwYWdlbmN5JTIwbG9nb3xlbnwxfHx8fDE3NTk5MTQ4MzV8MA&ixlib=rb-4.1.0&q=80&w=1080"
+              alt="Cliente 6"
+              class="portfolio-logo"
+            />
+          </div>
+        </div>
+      </div>
     </section>
 
     <!-- About Section -->
     <section id="nosotros" class="about">
-        <div class="container">
-            <div class="about-content">
-                <div class="about-text">
-                    <h2 class="section-title">Sobre Nosotros</h2>
-                    <p class="about-description">Somos una empresa especializada en soluciones digitales innovadoras. Combinamos tecnología de vanguardia con experiencia en desarrollo para crear productos que transforman negocios.</p>
-                    
-                    <div class="about-details">
-                        <div class="about-item">
-                            <h4>Nuestra Misión</h4>
-                            <p>Transformar negocios a través de soluciones digitales innovadoras y accesibles.</p>
-                        </div>
-                        <div class="about-item">
-                            <h4>Nuestra Visión</h4>
-                            <p>Ser la empresa líder en América Latina en transformación digital para empresas de todos los tamaños.</p>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="about-image">
-                    <img src="https://images.unsplash.com/photo-1709715357520-5e1047a2b691?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxidXNpbmVzcyUyMHRlYW0lMjBtZWV0aW5nfGVufDF8fHx8MTc1OTkzMzEzNXww&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral" alt="Equipo Novusio" class="about-img">
-                    <div class="about-decoration about-decoration-1"></div>
-                    <div class="about-decoration about-decoration-2"></div>
-                </div>
+      <div class="container">
+        <div class="about-content">
+          <div class="about-text">
+            <h2 class="section-title">Sobre Nosotros</h2>
+            <p class="about-description">
+              Somos una empresa especializada en soluciones digitales
+              innovadoras. Combinamos tecnología de vanguardia con experiencia
+              en desarrollo para crear productos que transforman negocios.
+            </p>
+
+            <div class="about-details">
+              <div class="about-item">
+                <h4>Nuestra Misión</h4>
+                <p>
+                  Transformar negocios a través de soluciones digitales
+                  innovadoras y accesibles.
+                </p>
+              </div>
+              <div class="about-item">
+                <h4>Nuestra Visión</h4>
+                <p>
+                  Ser la empresa líder en América Latina en transformación
+                  digital para empresas de todos los tamaños.
+                </p>
+              </div>
             </div>
-            
-            <div class="values-section">
-                <h3 class="values-title">Nuestros Valores</h3>
-                <div class="values-grid">
-                    <div class="value-card">
-                        <div class="value-icon">
-                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <circle cx="12" cy="12" r="10"></circle>
-                                <circle cx="12" cy="12" r="6"></circle>
-                                <circle cx="12" cy="12" r="2"></circle>
-                            </svg>
-                        </div>
-                        <h4>Innovación</h4>
-                    </div>
-                    <div class="value-card">
-                        <div class="value-icon">
-                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M9 12l2 2 4-4"></path>
-                                <path d="M21 12c-1 0-3-1-3-3s2-3 3-3 3 1 3 3-2 3-3 3"></path>
-                                <path d="M3 12c1 0 3-1 3-3s-2-3-3-3-3 1-3 3 2 3 3 3"></path>
-                            </svg>
-                        </div>
-                        <h4>Excelencia</h4>
-                    </div>
-                    <div class="value-card">
-                        <div class="value-icon">
-                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-                            </svg>
-                        </div>
-                        <h4>Compromiso</h4>
-                    </div>
-                    <div class="value-card">
-                        <div class="value-icon">
-                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-                                <path d="M9 9h6v6H9z"></path>
-                            </svg>
-                        </div>
-                        <h4>Transparencia</h4>
-                    </div>
-                </div>
-            </div>
+          </div>
+
+          <div class="about-image">
+            <img
+              src="https://images.unsplash.com/photo-1709715357520-5e1047a2b691?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxidXNpbmVzcyUyMHRlYW0lMjBtZWV0aW5nfGVufDF8fHx8MTc1OTkzMzEzNXww&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral"
+              alt="Equipo Novusio"
+              class="about-img"
+            />
+            <div class="about-decoration about-decoration-1"></div>
+            <div class="about-decoration about-decoration-2"></div>
+          </div>
         </div>
+
+        <div class="values-section">
+          <h3 class="values-title">Nuestros Valores</h3>
+          <div class="values-grid">
+            <div class="value-card">
+              <div class="value-icon">
+                <svg
+                  width="32"
+                  height="32"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <circle cx="12" cy="12" r="6"></circle>
+                  <circle cx="12" cy="12" r="2"></circle>
+                </svg>
+              </div>
+              <h4>Innovación</h4>
+            </div>
+            <div class="value-card">
+              <div class="value-icon">
+                <svg
+                  width="32"
+                  height="32"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path d="M9 12l2 2 4-4"></path>
+                  <path d="M21 12c-1 0-3-1-3-3s2-3 3-3 3 1 3 3-2 3-3 3"></path>
+                  <path d="M3 12c1 0 3-1 3-3s-2-3-3-3-3 1-3 3 2 3 3 3"></path>
+                </svg>
+              </div>
+              <h4>Excelencia</h4>
+            </div>
+            <div class="value-card">
+              <div class="value-icon">
+                <svg
+                  width="32"
+                  height="32"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                </svg>
+              </div>
+              <h4>Compromiso</h4>
+            </div>
+            <div class="value-card">
+              <div class="value-icon">
+                <svg
+                  width="32"
+                  height="32"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                  <path d="M9 9h6v6H9z"></path>
+                </svg>
+              </div>
+              <h4>Transparencia</h4>
+            </div>
+          </div>
+        </div>
+      </div>
     </section>
 
     <!-- Contact Section -->
     <section id="contacto" class="contact">
-        <div class="container">
-            <div class="section-header">
-                <h2 class="section-title">Contáctanos</h2>
-                <p class="section-subtitle">¿Tienes un proyecto en mente? Hablemos</p>
-            </div>
-            
-            <div class="contact-content">
-                <div class="contact-info">
-                    <div class="contact-card">
-                        <div class="contact-icon">
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
-                                <polyline points="22,6 12,13 2,6"></polyline>
-                            </svg>
-                        </div>
-                        <div class="contact-details">
-                            <h4>Email</h4>
-                            <p>contacto@novusiopy.com</p>
-                        </div>
-                    </div>
-                    
-                    <div class="contact-card">
-                        <div class="contact-icon">
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
-                            </svg>
-                        </div>
-                        <div class="contact-details">
-                            <h4>Teléfono</h4>
-                            <p>+55 11 99999-9999</p>
-                        </div>
-                    </div>
-                    
-                    <div class="contact-card">
-                        <div class="contact-icon">
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
-                                <circle cx="12" cy="10" r="3"></circle>
-                            </svg>
-                        </div>
-                        <div class="contact-details">
-                            <h4>Ubicación</h4>
-                            <p>São Paulo, Brasil</p>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="contact-form-container">
-                    <form class="contact-form" id="contactForm">
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label for="name">Nombre</label>
-                                <input type="text" id="name" name="name" placeholder="Tu nombre" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="email">Email</label>
-                                <input type="email" id="email" name="email" placeholder="tu@email.com" required>
-                            </div>
-                        </div>
-                        
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label for="phone">Teléfono</label>
-                                <input type="tel" id="phone" name="phone" placeholder="+595 981 234 567">
-                            </div>
-                            <div class="form-group">
-                                <label for="company">Empresa</label>
-                                <input type="text" id="company" name="company" placeholder="Tu empresa">
-                            </div>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="message">Mensaje</label>
-                            <textarea id="message" name="message" placeholder="Cuéntanos sobre tu proyecto..." rows="6" required></textarea>
-                        </div>
-                        
-                        <button type="submit" class="submit-btn">
-                            Enviar Mensaje
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <line x1="22" y1="2" x2="11" y2="13"></line>
-                                <polygon points="22,2 15,22 11,13 2,9 22,2"></polygon>
-                            </svg>
-                        </button>
-                    </form>
-                </div>
-            </div>
+      <div class="container">
+        <div class="section-header">
+          <h2 class="section-title">Contáctanos</h2>
+          <p class="section-subtitle">¿Tienes un proyecto en mente? Hablemos</p>
         </div>
+
+        <div class="contact-content">
+          <div class="contact-info">
+            <div class="contact-card">
+              <div class="contact-icon">
+                <svg
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path
+                    d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"
+                  ></path>
+                  <polyline points="22,6 12,13 2,6"></polyline>
+                </svg>
+              </div>
+              <div class="contact-details">
+                <h4>Email</h4>
+                <p>contacto@novusiopy.com</p>
+              </div>
+            </div>
+
+            <div class="contact-card">
+              <div class="contact-icon">
+                <svg
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path
+                    d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"
+                  ></path>
+                </svg>
+              </div>
+              <div class="contact-details">
+                <h4>Teléfono</h4>
+                <p>+55 11 99999-9999</p>
+              </div>
+            </div>
+
+            <div class="contact-card">
+              <div class="contact-icon">
+                <svg
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path
+                    d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"
+                  ></path>
+                  <circle cx="12" cy="10" r="3"></circle>
+                </svg>
+              </div>
+              <div class="contact-details">
+                <h4>Ubicación</h4>
+                <p>São Paulo, Brasil</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="contact-form-container">
+            <form class="contact-form" id="contactForm">
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="name">Nombre</label>
+                  <input
+                    type="text"
+                    id="name"
+                    name="name"
+                    placeholder="Tu nombre"
+                    required
+                  />
+                </div>
+                <div class="form-group">
+                  <label for="email">Email</label>
+                  <input
+                    type="email"
+                    id="email"
+                    name="email"
+                    placeholder="tu@email.com"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="phone">Teléfono</label>
+                  <input
+                    type="tel"
+                    id="phone"
+                    name="phone"
+                    placeholder="+595 981 234 567"
+                  />
+                </div>
+                <div class="form-group">
+                  <label for="company">Empresa</label>
+                  <input
+                    type="text"
+                    id="company"
+                    name="company"
+                    placeholder="Tu empresa"
+                  />
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="message">Mensaje</label>
+                <textarea
+                  id="message"
+                  name="message"
+                  placeholder="Cuéntanos sobre tu proyecto..."
+                  rows="6"
+                  required
+                ></textarea>
+              </div>
+
+              <button type="submit" class="submit-btn">
+                Enviar Mensaje
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <line x1="22" y1="2" x2="11" y2="13"></line>
+                  <polygon points="22,2 15,22 11,13 2,9 22,2"></polygon>
+                </svg>
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
     </section>
 
     <!-- Footer -->
     <footer class="footer">
-        <div class="container">
-            <div class="footer-content">
-                <div class="footer-brand">
-                    <div class="footer-logo">
-                        <span class="footer-logo-text">N</span>
-                    </div>
-                    <span class="footer-company-name">NOVUSIO</span>
-                </div>
-                
-                <div class="footer-links">
-                    <div class="footer-section">
-                        <h4>Servicios</h4>
-                        <ul>
-                            <li><a href="#servicios">E-commerce</a></li>
-                            <li><a href="#servicios">Integraciones</a></li>
-                        </ul>
-                    </div>
-                    
-                    <div class="footer-section">
-                        <h4>Empresa</h4>
-                        <ul>
-                            <li><a href="#nosotros">Sobre Nosotros</a></li>
-                            <li><a href="#portafolio">Portafolio</a></li>
-                        </ul>
-                    </div>
-                    
-                    <div class="footer-section">
-                        <h4>Soporte</h4>
-                        <ul>
-                            <li><a href="#contacto">Contacto</a></li>
-                            <li><a href="#">FAQ</a></li>
-                        </ul>
-                    </div>
-                </div>
+      <div class="container">
+        <div class="footer-content">
+          <div class="footer-brand">
+            <div class="footer-logo">
+              <span class="footer-logo-text">N</span>
             </div>
-            
-            <div class="footer-bottom">
-                <p class="footer-copyright">© 2024 Novus Iopy. Todos los derechos reservados.</p>
-                
-                <div class="footer-social">
-                    <a href="https://facebook.com" aria-label="Facebook" class="social-link">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path>
-                        </svg>
-                    </a>
-                    <a href="https://instagram.com" aria-label="Instagram" class="social-link">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                            <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
-                            <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
-                            <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
-                        </svg>
-                    </a>
-                    <a href="https://linkedin.com" aria-label="LinkedIn" class="social-link">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path>
-                            <rect x="2" y="9" width="4" height="12"></rect>
-                            <circle cx="4" cy="4" r="2"></circle>
-                        </svg>
-                    </a>
-                    <a href="https://twitter.com" aria-label="Twitter" class="social-link">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M23 3a10.9 10.9 0 0 1-3.14 1.53 4.48 4.48 0 0 0-7.86 3v1A10.66 10.66 0 0 1 3 4s-4 9 5 13a11.64 11.64 0 0 1-7 2c9 5 20 0 20-11.5a4.5 4.5 0 0 0-.08-.83A7.72 7.72 0 0 0 23 3z"></path>
-                        </svg>
-                    </a>
-                </div>
+            <span class="footer-company-name">NOVUSIO</span>
+          </div>
+
+          <div class="footer-links">
+            <div class="footer-section">
+              <h4>Servicios</h4>
+              <ul>
+                <li><a href="#servicios">E-commerce</a></li>
+                <li><a href="#servicios">Integraciones</a></li>
+              </ul>
             </div>
+
+            <div class="footer-section">
+              <h4>Empresa</h4>
+              <ul>
+                <li><a href="#nosotros">Sobre Nosotros</a></li>
+                <li><a href="#portafolio">Portafolio</a></li>
+              </ul>
+            </div>
+
+            <div class="footer-section">
+              <h4>Soporte</h4>
+              <ul>
+                <li><a href="#contacto">Contacto</a></li>
+                <li><a href="#">FAQ</a></li>
+              </ul>
+            </div>
+          </div>
         </div>
+
+        <div class="footer-bottom">
+          <p class="footer-copyright">
+            © 2024 Novus Iopy. Todos los derechos reservados.
+          </p>
+
+          <div class="footer-social">
+            <a
+              href="https://facebook.com"
+              aria-label="Facebook"
+              class="social-link"
+            >
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+              >
+                <path
+                  d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"
+                ></path>
+              </svg>
+            </a>
+            <a
+              href="https://instagram.com"
+              aria-label="Instagram"
+              class="social-link"
+            >
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+              >
+                <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
+                <path
+                  d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"
+                ></path>
+                <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
+              </svg>
+            </a>
+            <a
+              href="https://linkedin.com"
+              aria-label="LinkedIn"
+              class="social-link"
+            >
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+              >
+                <path
+                  d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"
+                ></path>
+                <rect x="2" y="9" width="4" height="12"></rect>
+                <circle cx="4" cy="4" r="2"></circle>
+              </svg>
+            </a>
+            <a
+              href="https://twitter.com"
+              aria-label="Twitter"
+              class="social-link"
+            >
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+              >
+                <path
+                  d="M23 3a10.9 10.9 0 0 1-3.14 1.53 4.48 4.48 0 0 0-7.86 3v1A10.66 10.66 0 0 1 3 4s-4 9 5 13a11.64 11.64 0 0 1-7 2c9 5 20 0 20-11.5a4.5 4.5 0 0 0-.08-.83A7.72 7.72 0 0 0 23 3z"
+                ></path>
+              </svg>
+            </a>
+          </div>
+        </div>
+      </div>
     </footer>
 
     <script src="script.js"></script>
-    </body>
-  </html>
+  </body>
+</html>
