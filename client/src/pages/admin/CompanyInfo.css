@@ -1,0 +1,55 @@
+.company-info-page {
+  animation: fadeIn 0.3s ease;
+}
+
+.company-form {
+  background-color: white;
+  border-radius: 0.75rem;
+  padding: 2rem;
+  box-shadow: var(--shadow);
+  max-width: 600px;
+}
+
+.company-form h3 {
+  margin-bottom: 1.5rem;
+  color: var(--text-primary);
+}
+
+.company-form .form-group {
+  margin-bottom: 1.25rem;
+}
+
+.company-form .form-group:last-of-type {
+  margin-bottom: 1.5rem;
+}
+
+.company-form label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  margin-bottom: 0.5rem;
+}
+
+.company-form input,
+.company-form textarea {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  font-size: 1rem;
+  font-family: inherit;
+  transition: all 0.15s;
+}
+
+.company-form input:focus,
+.company-form textarea:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.1);
+}
+
+.company-form textarea {
+  resize: vertical;
+  min-height: 120px;
+}

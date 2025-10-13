@@ -144,7 +144,7 @@ function initContactForm() {
   const contactForm = document.getElementById('contactForm');
 
   if (contactForm) {
-    contactForm.addEventListener('submit', function (e) {
+    contactForm.addEventListener('submit', async function (e) {
       e.preventDefault();
 
       // Get form data
@@ -164,20 +164,37 @@ function initContactForm() {
         return;
       }
 
-      // Simulate form submission
+      // Submit to API
       const submitBtn = this.querySelector('.submit-btn');
       const originalText = submitBtn.innerHTML;
 
       submitBtn.innerHTML = 'Enviando...';
       submitBtn.disabled = true;
 
-      // Simulate API call
-      setTimeout(() => {
-        alert('¡Mensaje enviado con éxito! Te contactaremos pronto.');
-        this.reset();
+      try {
+        const response = await fetch('/api/contact', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(data),
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+          alert('¡Mensaje enviado con éxito! Te contactaremos pronto.');
+          this.reset();
+        } else {
+          alert('Error al enviar mensaje. Por favor, intenta nuevamente.');
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        alert('Error al enviar mensaje. Por favor, intenta nuevamente.');
+      } finally {
         submitBtn.innerHTML = originalText;
         submitBtn.disabled = false;
-      }, 2000);
+      }
     });
   }
 }
@@ -340,8 +357,71 @@ function initPerformanceOptimizations() {
   });
 }
 
+// Load dynamic content from API
+async function loadDynamicContent() {
+  try {
+    // Load hero slides
+    const slidesResponse = await fetch('/api/slides');
+    const slidesData = await slidesResponse.json();
+
+    if (slidesData.success && slidesData.data.length > 0) {
+      updateHeroSlides(slidesData.data);
+    }
+
+    // Load services
+    const servicesResponse = await fetch('/api/services');
+    const servicesData = await servicesResponse.json();
+
+    if (servicesData.success && servicesData.data.length > 0) {
+      updateServices(servicesData.data);
+    }
+
+    // Load portfolio clients
+    const portfolioResponse = await fetch('/api/portfolio');
+    const portfolioData = await portfolioResponse.json();
+
+    if (portfolioData.success && portfolioData.data.length > 0) {
+      updatePortfolio(portfolioData.data);
+    }
+
+    // Load company info
+    const companyResponse = await fetch('/api/company');
+    const companyData = await companyResponse.json();
+
+    if (companyData.success) {
+      updateCompanyInfo(companyData.data);
+    }
+  } catch (error) {
+    console.error('Error loading dynamic content:', error);
+    // Continue with static content if API fails
+  }
+}
+
+function updateHeroSlides(slides) {
+  // Implementation would update the hero carousel with new slides
+  console.log('Dynamic slides loaded:', slides.length);
+}
+
+function updateServices(services) {
+  // Implementation would update services section
+  console.log('Dynamic services loaded:', services.length);
+}
+
+function updatePortfolio(clients) {
+  // Implementation would update portfolio section
+  console.log('Dynamic portfolio loaded:', clients.length);
+}
+
+function updateCompanyInfo(info) {
+  // Implementation would update company information
+  console.log('Company info loaded');
+}
+
 // Initialize all functionality
 document.addEventListener('DOMContentLoaded', function () {
+  // Load dynamic content first
+  loadDynamicContent();
+
   // Initialize all components
   const heroCarousel = new HeroCarousel();
   window.heroCarousel = heroCarousel; // Make it globally accessible
