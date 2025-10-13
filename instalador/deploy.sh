@@ -1082,19 +1082,20 @@ setup_nginx() {
     fi
     
     # Criar configuração do site com nome específico do domínio
-    log "📝 Criando configuração para $DOMAIN..."
+    # IMPORTANTE: Configuração inicial SEM SSL (será adicionado pelo Certbot)
+    log "📝 Criando configuração inicial para $DOMAIN (sem SSL)..."
     cat > /etc/nginx/sites-available/$DOMAIN << EOF
 # Rate limiting
-limit_req_zone \$binary_remote_addr zone=api:10m rate=10r/s;
-limit_req_zone \$binary_remote_addr zone=login:10m rate=1r/s;
+limit_req_zone \$binary_remote_addr zone=api_$APP_PORT:10m rate=10r/s;
+limit_req_zone \$binary_remote_addr zone=login_$APP_PORT:10m rate=1r/s;
 
 # Upstream para a aplicação
-upstream novusio_backend {
+upstream novusio_backend_$APP_PORT {
     server 127.0.0.1:$APP_PORT;
     keepalive 32;
 }
 
-# Redirecionamento HTTP para HTTPS
+# Configuração HTTP (Certbot irá adicionar HTTPS depois)
 server {
     listen 80;
     listen [::]:80;
@@ -1105,43 +1106,15 @@ server {
         root /var/www/html;
     }
     
-    # Redirecionar todo o resto para HTTPS
-    location / {
-        return 301 https://\$server_name\$request_uri;
-    }
-}
-
-# Configuração HTTPS
-server {
-    listen 443 ssl http2;
-    listen [::]:443 ssl http2;
-    server_name $DOMAIN www.$DOMAIN;
-    
-    # SSL Configuration
-    ssl_certificate /etc/letsencrypt/live/$DOMAIN/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/$DOMAIN/privkey.pem;
-    ssl_protocols TLSv1.2 TLSv1.3;
-    ssl_ciphers ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-RSA-AES128-SHA256:ECDHE-RSA-AES256-SHA384;
-    ssl_prefer_server_ciphers off;
-    ssl_session_cache shared:SSL:10m;
-    ssl_session_timeout 10m;
-    
-    # Security headers
-    add_header X-Frame-Options DENY;
-    add_header X-Content-Type-Options nosniff;
-    add_header X-XSS-Protection "1; mode=block";
-    add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
-    add_header Referrer-Policy "strict-origin-when-cross-origin";
+    # Root directory para arquivos estáticos
+    root $PROJECT_DIR/client/dist;
+    index index.html;
     
     # Gzip compression
     gzip on;
     gzip_vary on;
     gzip_min_length 1024;
     gzip_types text/plain text/css text/xml text/javascript application/javascript application/xml+rss application/json;
-    
-    # Root directory
-    root /var/www/html;
-    index index.html index.htm;
     
     # Static files (React build)
     location / {
@@ -1154,9 +1127,9 @@ server {
         }
     }
     
-    # Backend API
+    # Backend fallback
     location @backend {
-        proxy_pass http://novusio_backend;
+        proxy_pass http://novusio_backend_$APP_PORT;
         proxy_http_version 1.1;
         proxy_set_header Upgrade \$http_upgrade;
         proxy_set_header Connection 'upgrade';
@@ -1170,9 +1143,9 @@ server {
     
     # API routes with rate limiting
     location /api/ {
-        limit_req zone=api burst=20 nodelay;
+        limit_req zone=api_$APP_PORT burst=20 nodelay;
         
-        proxy_pass http://novusio_backend;
+        proxy_pass http://novusio_backend_$APP_PORT;
         proxy_http_version 1.1;
         proxy_set_header Upgrade \$http_upgrade;
         proxy_set_header Connection 'upgrade';
@@ -1186,9 +1159,9 @@ server {
     
     # Admin login with strict rate limiting
     location /api/auth/login {
-        limit_req zone=login burst=5 nodelay;
+        limit_req zone=login_$APP_PORT burst=5 nodelay;
         
-        proxy_pass http://novusio_backend;
+        proxy_pass http://novusio_backend_$APP_PORT;
         proxy_http_version 1.1;
         proxy_set_header Host \$host;
         proxy_set_header X-Real-IP \$remote_addr;
@@ -1244,6 +1217,9 @@ EOF
         echo "✓ Configuração criada: /etc/nginx/sites-available/$DOMAIN"
         echo "✓ Site habilitado em: /etc/nginx/sites-enabled/$DOMAIN"
         echo "✓ Proxy reverso: http://localhost:$APP_PORT"
+        echo "✓ Site temporário: http://$DOMAIN (HTTP)"
+        echo ""
+        echo -e "${BLUE}ℹ️  Nota: SSL/HTTPS será configurado no próximo passo!${NC}"
         echo ""
         
     else
@@ -1285,18 +1261,33 @@ setup_ssl() {
     fi
     
     # Criar diretório para challenge do Certbot
+    log "📁 Criando diretório para validação SSL..."
     mkdir -p /var/www/html
     
     # Instalar Certbot
     log "📦 Instalando Certbot..."
     apt-get install -y certbot python3-certbot-nginx
     
-    # Recarregar Nginx antes de obter certificado
-    log "🔄 Recarregando Nginx..."
-    systemctl reload nginx
+    # Garantir que Nginx está rodando
+    log "🔄 Garantindo que Nginx está rodando..."
+    if ! systemctl is-active --quiet nginx; then
+        log "🚀 Iniciando Nginx..."
+        systemctl start nginx
+    else
+        systemctl reload nginx || systemctl restart nginx
+    fi
+    
+    # Verificar se porta 80 está acessível
+    log "🔍 Verificando porta 80..."
+    if ! netstat -tuln 2>/dev/null | grep -q ":80 " && ! ss -tuln 2>/dev/null | grep -q ":80 "; then
+        warning "⚠️ Porta 80 não está acessível. SSL pode falhar."
+    fi
     
     # Obter certificado SSL
-    log "🔐 Obtendo certificado SSL..."
+    log "🔐 Obtendo certificado SSL para $DOMAIN e www.$DOMAIN..."
+    log "📧 Email para notificações: $EMAIL"
+    echo ""
+    echo -e "${YELLOW}⏳ Aguarde... Isso pode levar alguns minutos...${NC}"
     echo ""
     
     if certbot --nginx \
