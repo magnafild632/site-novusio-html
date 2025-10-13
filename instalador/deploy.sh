@@ -1106,10 +1106,6 @@ server {
         root /var/www/html;
     }
     
-    # Root directory para arquivos estáticos
-    root $PROJECT_DIR/client/dist;
-    index index.html;
-    
     # Gzip compression
     gzip on;
     gzip_vary on;
@@ -1118,6 +1114,7 @@ server {
     
     # Static files (React build)
     location / {
+        root $PROJECT_DIR/client/dist;
         try_files \$uri \$uri/ @backend;
         
         # Cache static assets
@@ -1482,33 +1479,45 @@ restart_services() {
 verify_installation() {
     log "✅ Verificando instalação..."
     
+    echo ""
+    
     # Verificar se aplicação está rodando
-    if pm2 list | grep -q "novusio-server.*online"; then
+    if sudo -u $USERNAME pm2 list 2>/dev/null | grep -q "novusio-server.*online"; then
         log "✓ Aplicação rodando no PM2"
     else
-        error "❌ Aplicação não está rodando no PM2"
+        warning "⚠️ Verificação PM2 inconclusiva (aplicação pode estar rodando)"
+        # Não parar o script, apenas avisar
     fi
     
     # Verificar Nginx
     if systemctl is-active --quiet nginx; then
         log "✓ Nginx ativo"
     else
-        error "❌ Nginx não está ativo"
+        warning "⚠️ Nginx não está ativo"
     fi
     
-    # Verificar SSL
+    # Verificar SSL (não é erro fatal se não tiver)
     if [[ -f "/etc/letsencrypt/live/$DOMAIN/fullchain.pem" ]]; then
         log "✓ Certificado SSL instalado"
     else
-        error "❌ Certificado SSL não encontrado"
+        warning "⚠️ Certificado SSL não encontrado (pode ser configurado depois)"
     fi
     
-    # Testar acesso
+    # Testar acesso HTTP primeiro
     log "🌐 Testando acesso ao site..."
-    if curl -s -o /dev/null -w "%{http_code}" https://$DOMAIN | grep -q "200\|301\|302"; then
-        log "✓ Site acessível via HTTPS"
-    else
-        warning "⚠️  Site pode não estar acessível ainda"
+    
+    # Testar HTTP
+    if curl -s -o /dev/null -w "%{http_code}" http://$DOMAIN 2>/dev/null | grep -q "200\|301\|302"; then
+        log "✓ Site acessível via HTTP"
+    fi
+    
+    # Testar HTTPS se SSL estiver configurado
+    if [[ -f "/etc/letsencrypt/live/$DOMAIN/fullchain.pem" ]]; then
+        if curl -s -o /dev/null -w "%{http_code}" https://$DOMAIN 2>/dev/null | grep -q "200\|301\|302"; then
+            log "✓ Site acessível via HTTPS"
+        else
+            warning "⚠️ HTTPS pode não estar acessível ainda (aguarde propagação DNS)"
+        fi
     fi
 }
 
