@@ -998,6 +998,8 @@ module.exports = {
     cwd: '$PROJECT_DIR',
     instances: 'max',
     exec_mode: 'cluster',
+    autorestart: true,
+    watch: false,
     env: {
       NODE_ENV: 'production',
       PORT: $APP_PORT
@@ -1010,7 +1012,9 @@ module.exports = {
     node_args: '--max-old-space-size=2048',
     restart_delay: 4000,
     max_restarts: 10,
-    min_uptime: '10s'
+    min_uptime: '10s',
+    kill_timeout: 5000,
+    listen_timeout: 3000
   }]
 };
 EOF
@@ -1084,14 +1088,14 @@ setup_nginx() {
     # Criar configuração do site com nome específico do domínio
     # IMPORTANTE: Configuração inicial SEM SSL (será adicionado pelo Certbot)
     log "📝 Criando configuração inicial para $DOMAIN (sem SSL)..."
-    cat > /etc/nginx/sites-available/$DOMAIN << EOF
+    cat > /etc/nginx/sites-available/$DOMAIN << 'NGINX_CONFIG_EOF'
 # Rate limiting
-limit_req_zone \$binary_remote_addr zone=api_$APP_PORT:10m rate=10r/s;
-limit_req_zone \$binary_remote_addr zone=login_$APP_PORT:10m rate=1r/s;
+limit_req_zone $binary_remote_addr zone=api_3000:10m rate=10r/s;
+limit_req_zone $binary_remote_addr zone=login_3000:10m rate=1r/s;
 
 # Upstream para a aplicação
-upstream novusio_backend_$APP_PORT {
-    server 127.0.0.1:$APP_PORT;
+upstream novusio_backend_3000 {
+    server 127.0.0.1:3000;
     keepalive 32;
 }
 
@@ -1099,12 +1103,11 @@ upstream novusio_backend_$APP_PORT {
 server {
     listen 80;
     listen [::]:80;
-    server_name $DOMAIN www.$DOMAIN;
+    server_name DOMAIN_PLACEHOLDER www.DOMAIN_PLACEHOLDER;
     
-    # Certbot challenge
-    location /.well-known/acme-challenge/ {
-        root /var/www/html;
-    }
+    # Root do React
+    root PROJECT_DIR_PLACEHOLDER/client/dist;
+    index index.html;
     
     # Gzip compression
     gzip on;
@@ -1112,67 +1115,57 @@ server {
     gzip_min_length 1024;
     gzip_types text/plain text/css text/xml text/javascript application/javascript application/xml+rss application/json;
     
-    # Static files (React build)
+    # Certbot challenge
+    location /.well-known/acme-challenge/ {
+        root /var/www/html;
+    }
+    
+    # Arquivos estáticos do React
     location / {
-        root $PROJECT_DIR/client/dist;
-        try_files \$uri \$uri/ @backend;
-        
-        # Cache static assets
-        location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$ {
-            expires 1y;
-            add_header Cache-Control "public, immutable";
-        }
+        try_files $uri $uri/ /index.html;
     }
     
-    # Backend fallback
-    location @backend {
-        proxy_pass http://novusio_backend_$APP_PORT;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade \$http_upgrade;
-        proxy_set_header Connection 'upgrade';
-        proxy_set_header Host \$host;
-        proxy_set_header X-Real-IP \$remote_addr;
-        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto \$scheme;
-        proxy_cache_bypass \$http_upgrade;
-        proxy_read_timeout 86400;
+    # Cache de assets
+    location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$ {
+        expires 1y;
+        add_header Cache-Control "public, immutable";
     }
     
-    # API routes with rate limiting
+    # API routes com rate limiting
     location /api/ {
-        limit_req zone=api_$APP_PORT burst=20 nodelay;
+        limit_req zone=api_3000 burst=20 nodelay;
         
-        proxy_pass http://novusio_backend_$APP_PORT;
+        proxy_pass http://novusio_backend_3000;
         proxy_http_version 1.1;
-        proxy_set_header Upgrade \$http_upgrade;
+        proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection 'upgrade';
-        proxy_set_header Host \$host;
-        proxy_set_header X-Real-IP \$remote_addr;
-        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto \$scheme;
-        proxy_cache_bypass \$http_upgrade;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_cache_bypass $http_upgrade;
         proxy_read_timeout 86400;
     }
     
-    # Admin login with strict rate limiting
+    # Admin login com rate limiting rigoroso
     location /api/auth/login {
-        limit_req zone=login_$APP_PORT burst=5 nodelay;
+        limit_req zone=login_3000 burst=5 nodelay;
         
-        proxy_pass http://novusio_backend_$APP_PORT;
+        proxy_pass http://novusio_backend_3000;
         proxy_http_version 1.1;
-        proxy_set_header Host \$host;
-        proxy_set_header X-Real-IP \$remote_addr;
-        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto \$scheme;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
     }
     
     # Upload files
     location /uploads/ {
-        alias $PROJECT_DIR/uploads/;
+        alias PROJECT_DIR_PLACEHOLDER/uploads/;
         expires 1y;
         add_header Cache-Control "public";
         
-        # Security
+        # Security - bloquear scripts
         location ~ \.(php|jsp|asp|sh|cgi)$ {
             deny all;
         }
@@ -1191,7 +1184,11 @@ server {
         log_not_found off;
     }
 }
-EOF
+NGINX_CONFIG_EOF
+    
+    # Substituir placeholders
+    sed -i "s|DOMAIN_PLACEHOLDER|$DOMAIN|g" /etc/nginx/sites-available/$DOMAIN
+    sed -i "s|PROJECT_DIR_PLACEHOLDER|$PROJECT_DIR|g" /etc/nginx/sites-available/$DOMAIN
     
     # Habilitar site com nome específico
     log "🔗 Habilitando site $DOMAIN..."
