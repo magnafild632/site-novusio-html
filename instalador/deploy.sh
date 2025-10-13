@@ -642,22 +642,47 @@ create_user() {
 clone_repository() {
     log "📥 Clonando repositório $GIT_REPO..."
     
-    # Criar diretório se não existir
-    mkdir -p $PROJECT_DIR
-    cd $PROJECT_DIR
-    
-    # Remover diretório se já existir
-    if [[ -d ".git" ]]; then
-        warning "Repositório já existe. Fazendo pull..."
-        git pull origin main
+    # Verificar se diretório existe e não está vazio
+    if [[ -d "$PROJECT_DIR" ]] && [[ -n "$(ls -A $PROJECT_DIR 2>/dev/null)" ]]; then
+        warning "⚠️ Diretório $PROJECT_DIR já existe e não está vazio"
+        
+        # Verificar se é um repositório git
+        if [[ -d "$PROJECT_DIR/.git" ]]; then
+            log "📥 Repositório Git detectado, atualizando..."
+            cd $PROJECT_DIR
+            
+            # Salvar mudanças locais se houver
+            if [[ -n "$(git status --porcelain)" ]]; then
+                warning "⚠️ Existem mudanças locais, fazendo stash..."
+                git stash
+            fi
+            
+            # Atualizar código
+            git pull origin main || git pull origin master
+            log "✓ Repositório atualizado"
+        else
+            # Não é um repositório git, fazer backup e clonar
+            warning "⚠️ Não é um repositório Git, fazendo backup..."
+            BACKUP_DIR="${PROJECT_DIR}_backup_$(date +%Y%m%d_%H%M%S)"
+            mv $PROJECT_DIR $BACKUP_DIR
+            log "✓ Backup salvo em: $BACKUP_DIR"
+            
+            # Criar diretório e clonar
+            mkdir -p $PROJECT_DIR
+            cd $PROJECT_DIR
+            git clone $GIT_REPO .
+            log "✓ Repositório clonado em $PROJECT_DIR"
+        fi
     else
+        # Diretório não existe ou está vazio
+        mkdir -p $PROJECT_DIR
+        cd $PROJECT_DIR
         git clone $GIT_REPO .
+        log "✓ Repositório clonado em $PROJECT_DIR"
     fi
     
     # Configurar permissões
     chown -R $USERNAME:$USERNAME $PROJECT_DIR
-    
-    log "✓ Repositório clonado em $PROJECT_DIR"
 }
 
 # Instalar dependências e build
