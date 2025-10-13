@@ -962,15 +962,31 @@ EOF
 setup_nginx() {
     log "🌐 Configurando Nginx..."
     
+    echo ""
+    echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo -e "${BLUE}🌐 CONFIGURAÇÃO NGINX${NC}"
+    echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo ""
+    echo "Configurações que serão aplicadas:"
+    echo "  • Domínio: $DOMAIN"
+    echo "  • Porta da aplicação: $APP_PORT"
+    echo "  • Proxy reverso: localhost:$APP_PORT"
+    echo "  • Rate limiting: Sim"
+    echo "  • Compressão Gzip: Sim"
+    echo "  • Headers de segurança: Sim"
+    echo ""
+    
     # NÃO remover configuração padrão se houver outros sites
-    if [[ $(ls -A /etc/nginx/sites-enabled/ | wc -l) -gt 1 ]]; then
+    if [[ $(ls -A /etc/nginx/sites-enabled/ 2>/dev/null | wc -l) -gt 1 ]]; then
         warning "⚠️ Existem outros sites configurados. Mantendo configuração padrão."
     else
         # Remover configuração padrão apenas se for o único site
+        log "🗑️ Removendo configuração padrão do Nginx..."
         rm -f /etc/nginx/sites-enabled/default
     fi
     
     # Criar configuração do site com nome específico do domínio
+    log "📝 Criando configuração para $DOMAIN..."
     cat > /etc/nginx/sites-available/$DOMAIN << EOF
 # Rate limiting
 limit_req_zone \$binary_remote_addr zone=api:10m rate=10r/s;
@@ -1112,13 +1128,32 @@ server {
 EOF
     
     # Habilitar site com nome específico
+    log "🔗 Habilitando site $DOMAIN..."
     ln -sf /etc/nginx/sites-available/$DOMAIN /etc/nginx/sites-enabled/
     
     # Testar configuração
-    if nginx -t; then
-        log "✓ Nginx configurado com sucesso"
+    log "🧪 Testando configuração do Nginx..."
+    if nginx -t 2>&1 | tee /tmp/nginx-test.log; then
+        log "✓ Configuração do Nginx válida!"
+        
+        # Recarregar Nginx
+        log "🔄 Recarregando Nginx..."
+        systemctl reload nginx
+        
+        echo ""
+        echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+        echo -e "${GREEN}✅ NGINX CONFIGURADO COM SUCESSO!${NC}"
+        echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+        echo ""
+        echo "✓ Configuração criada: /etc/nginx/sites-available/$DOMAIN"
+        echo "✓ Site habilitado em: /etc/nginx/sites-enabled/$DOMAIN"
+        echo "✓ Proxy reverso: http://localhost:$APP_PORT"
+        echo ""
+        
     else
-        error "❌ Erro na configuração do Nginx. Revertendo..."
+        error "❌ Erro na configuração do Nginx!"
+        cat /tmp/nginx-test.log
+        warning "Revertendo alterações..."
         rm -f /etc/nginx/sites-available/$DOMAIN
         rm -f /etc/nginx/sites-enabled/$DOMAIN
         exit 1
@@ -1129,18 +1164,88 @@ EOF
 setup_ssl() {
     log "🔒 Configurando SSL com Let's Encrypt..."
     
+    echo ""
+    echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo -e "${BLUE}🔐 CONFIGURAÇÃO SSL/HTTPS${NC}"
+    echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo ""
+    echo "Vamos configurar SSL gratuito com Let's Encrypt para:"
+    echo "  • Domínio: $DOMAIN"
+    echo "  • www.$DOMAIN"
+    echo "  • Email: $EMAIL"
+    echo ""
+    echo "O que será feito:"
+    echo "  ✓ Instalar Certbot"
+    echo "  ✓ Emitir certificado SSL gratuito"
+    echo "  ✓ Configurar redirect automático HTTP → HTTPS"
+    echo "  ✓ Configurar renovação automática (cron)"
+    echo ""
+    read -p "Deseja configurar SSL agora? (Y/n): " SETUP_SSL
+    
+    if [[ "$SETUP_SSL" =~ ^[Nn]$ ]]; then
+        warning "⚠️ SSL não configurado. Você pode configurar depois executando:"
+        warning "   sudo certbot --nginx -d $DOMAIN -d www.$DOMAIN --email $EMAIL --redirect"
+        return
+    fi
+    
+    # Criar diretório para challenge do Certbot
+    mkdir -p /var/www/html
+    
     # Instalar Certbot
+    log "📦 Instalando Certbot..."
     apt-get install -y certbot python3-certbot-nginx
     
+    # Recarregar Nginx antes de obter certificado
+    log "🔄 Recarregando Nginx..."
+    systemctl reload nginx
+    
     # Obter certificado SSL
-    certbot --nginx -d $DOMAIN -d www.$DOMAIN \
-        --non-interactive --agree-tos --email $EMAIL \
-        --redirect
+    log "🔐 Obtendo certificado SSL..."
+    echo ""
     
-    # Configurar renovação automática
-    (crontab -l 2>/dev/null; echo "0 12 * * * /usr/bin/certbot renew --quiet") | crontab -
-    
-    log "✓ SSL configurado com sucesso"
+    if certbot --nginx \
+        -d $DOMAIN \
+        -d www.$DOMAIN \
+        --non-interactive \
+        --agree-tos \
+        --email $EMAIL \
+        --redirect; then
+        
+        log "✓ Certificado SSL obtido com sucesso!"
+        
+        # Configurar renovação automática
+        log "⏰ Configurando renovação automática..."
+        (crontab -l 2>/dev/null | grep -v certbot; echo "0 12 * * * /usr/bin/certbot renew --quiet && systemctl reload nginx") | crontab -
+        
+        log "✓ Renovação automática configurada (diariamente ao meio-dia)"
+        
+        # Testar renovação
+        log "🔍 Testando renovação..."
+        certbot renew --dry-run
+        
+        echo ""
+        echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+        echo -e "${GREEN}✅ SSL/HTTPS CONFIGURADO COM SUCESSO!${NC}"
+        echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+        echo ""
+        echo "✓ Seu site agora está disponível em:"
+        echo "  • https://$DOMAIN"
+        echo "  • https://www.$DOMAIN"
+        echo ""
+        echo "✓ Redirect automático HTTP → HTTPS ativo"
+        echo "✓ Renovação automática configurada"
+        echo ""
+        
+    else
+        error "❌ Falha ao obter certificado SSL"
+        warning "Possíveis causas:"
+        warning "  • DNS não está apontando para este servidor"
+        warning "  • Porta 80 ou 443 bloqueada"
+        warning "  • Domínio inválido"
+        echo ""
+        warning "Você pode tentar manualmente depois:"
+        warning "  sudo certbot --nginx -d $DOMAIN -d www.$DOMAIN --email $EMAIL --redirect"
+    fi
 }
 
 # Configurar backup automático
