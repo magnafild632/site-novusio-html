@@ -517,7 +517,8 @@ collect_info() {
     
     # Informações do sistema
     read -p "🌐 Domínio (ex: novusio.com): " DOMAIN
-    read -p "📧 Email para SSL (Let's Encrypt): " EMAIL
+    read -p "📧 Email para SSL (Let's Encrypt) [suporte@novusiopy.com]: " EMAIL
+    EMAIL=${EMAIL:-suporte@novusiopy.com}
     read -p "👤 Usuário do sistema (ex: novusio): " USERNAME
     read -p "🔧 Porta da aplicação [3000]: " APP_PORT
     APP_PORT=${APP_PORT:-3000}

@@ -102,7 +102,7 @@ O script pedirá as seguintes informações:
 📋 CONFIGURAÇÃO INICIAL
 ==================================
 🌐 Domínio (ex: novusio.com): SEU-DOMINIO.com
-📧 Email para SSL (Let's Encrypt): seu-email@gmail.com
+📧 Email para SSL (Let's Encrypt) [suporte@novusiopy.com]: suporte@novusiopy.com
 👤 Usuário do sistema (ex: novusio): novusio
 🔧 Porta da aplicação [3000]: 3000
 📁 Diretório do projeto [/opt/novusio]: /opt/novusio

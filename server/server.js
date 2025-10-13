@@ -6,6 +6,9 @@ require('dotenv').config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Inicializar banco de dados
+const db = require('./config/database');
+
 // Middleware
 app.use(cors());
 app.use(express.json());
@@ -16,7 +19,7 @@ app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 // Em produção, servir arquivos do React build
 if (process.env.NODE_ENV === 'production') {
-  app.use(express.static(path.join(__dirname, '../dist')));
+  app.use(express.static(path.join(__dirname, '../client/dist')));
 }
 
 // Rotas da API
@@ -64,7 +67,7 @@ app.get('/api/health', (req, res) => {
 if (process.env.NODE_ENV === 'production') {
   app.get('*', (req, res) => {
     if (!req.path.startsWith('/api') && !req.path.startsWith('/uploads')) {
-      res.sendFile(path.join(__dirname, '../dist/index.html'));
+      res.sendFile(path.join(__dirname, '../client/dist/index.html'));
     }
   });
 }
@@ -79,10 +82,12 @@ app.use((req, res) => {
 
 // Tratamento de erros gerais
 app.use((err, req, res, next) => {
-  console.error('Erro:', err);
+  console.error('❌ Erro no servidor:', err);
+  console.error('Stack:', err.stack);
   res.status(500).json({
     success: false,
     message: err.message || 'Erro interno do servidor',
+    ...(process.env.NODE_ENV === 'development' && { stack: err.stack }),
   });
 });
 

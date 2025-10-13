@@ -43,7 +43,7 @@ if command -v certbot &> /dev/null; then
         echo "⚠️ Nenhum certificado SSL encontrado"
         echo ""
         echo "Para configurar SSL, execute:"
-        echo "  sudo certbot --nginx -d seu-dominio.com -d www.seu-dominio.com --email seu-email@gmail.com --redirect"
+        echo "  sudo certbot --nginx -d seu-dominio.com -d www.seu-dominio.com --email suporte@novusiopy.com --redirect"
     fi
 else
     echo "❌ Certbot não instalado"

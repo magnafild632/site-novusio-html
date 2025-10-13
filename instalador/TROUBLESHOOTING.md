@@ -309,7 +309,7 @@ apt-get install -y certbot python3-certbot-nginx
 
 # Obter certificado
 certbot --nginx -d seu-dominio.com -d www.seu-dominio.com \
-    --non-interactive --agree-tos --email seu-email@gmail.com
+    --non-interactive --agree-tos --email suporte@novusiopy.com
 
 # Verificar certificado
 certbot certificates
@@ -378,7 +378,7 @@ git clone https://TOKEN@github.com/usuario/repo.git
 ### Solução 2: Usar SSH
 ```bash
 # Gerar chave SSH
-ssh-keygen -t ed25519 -C "seu-email@gmail.com"
+ssh-keygen -t ed25519 -C "suporte@novusiopy.com"
 
 # Copiar chave pública
 cat ~/.ssh/id_ed25519.pub

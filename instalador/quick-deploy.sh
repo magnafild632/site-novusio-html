@@ -26,7 +26,8 @@ fi
 
 # Coletar informações básicas
 read -p "🌐 Domínio: " DOMAIN
-read -p "📧 Email: " EMAIL
+read -p "📧 Email para SSL [suporte@novusiopy.com]: " EMAIL
+EMAIL=${EMAIL:-suporte@novusiopy.com}
 read -p "🔗 Repositório Git: " GIT_REPO
 
 # Configurações padrão
