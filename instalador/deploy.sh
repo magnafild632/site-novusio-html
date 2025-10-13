@@ -68,24 +68,93 @@ show_menu() {
 # Deploy completo (função existente)
 deploy_complete() {
     log "🚀 Iniciando deploy completo..."
+    
+    echo ""
+    echo -e "${BLUE}═══════════════════════════════════════════════════════════${NC}"
+    echo -e "${GREEN}           DEPLOY COMPLETO - PASSO A PASSO${NC}"
+    echo -e "${BLUE}═══════════════════════════════════════════════════════════${NC}"
+    echo ""
+    
+    echo -e "${CYAN}[1/15]${NC} Coletando informações..."
     collect_info
+    
+    echo -e "${CYAN}[2/15]${NC} Verificando DNS..."
     check_dns
+    
+    echo -e "${CYAN}[3/15]${NC} Atualizando sistema..."
     update_system
+    
+    echo -e "${CYAN}[4/15]${NC} Instalando pacotes..."
     install_packages
+    
+    echo -e "${CYAN}[5/15]${NC} Configurando firewall..."
     setup_firewall
+    
+    echo -e "${CYAN}[6/15]${NC} Criando usuário..."
     create_user
+    
+    echo -e "${CYAN}[7/15]${NC} Clonando repositório..."
     clone_repository
+    
+    echo -e "${CYAN}[8/15]${NC} Fazendo build da aplicação..."
     build_application
+    
+    echo -e "${CYAN}[9/15]${NC} Configurando variáveis de ambiente..."
     setup_environment
+    
+    echo -e "${CYAN}[10/15]${NC} Configurando PM2..."
     setup_pm2
+    
+    echo ""
+    echo -e "${YELLOW}⏩ Continuando com configuração do servidor web...${NC}"
+    sleep 1
+    
+    echo ""
+    echo -e "${CYAN}[11/15]${NC} Configurando Nginx..."
     setup_nginx
+    
+    echo ""
+    echo -e "${YELLOW}⏩ Próximo: Configuração SSL...${NC}"
+    sleep 1
+    
+    echo ""
+    echo -e "${CYAN}[12/15]${NC} Configurando SSL/HTTPS..."
     setup_ssl
+    
+    echo -e "${CYAN}[13/15]${NC} Configurando backup automático..."
     setup_backup
+    
+    echo -e "${CYAN}[14/15]${NC} Configurando monitoramento..."
     setup_monitoring
+    
     setup_logrotate
+    
+    echo -e "${CYAN}[15/15]${NC} Inicializando banco de dados..."
     init_database
+    
     restart_services
     verify_installation
+    
+    # Verificação final do SSL
+    echo ""
+    echo -e "${BLUE}🔍 Verificação Final do SSL...${NC}"
+    if [[ -f "/etc/letsencrypt/live/$DOMAIN/fullchain.pem" ]]; then
+        echo -e "${GREEN}✅ Certificado SSL instalado e funcionando!${NC}"
+        echo "  • Certificado: /etc/letsencrypt/live/$DOMAIN/"
+        
+        # Mostrar data de expiração
+        EXPIRY=$(openssl x509 -enddate -noout -in "/etc/letsencrypt/live/$DOMAIN/fullchain.pem" 2>/dev/null | cut -d= -f2)
+        if [[ -n "$EXPIRY" ]]; then
+            echo "  • Expira em: $EXPIRY"
+        fi
+    else
+        echo -e "${YELLOW}⚠️ Certificado SSL NÃO foi instalado!${NC}"
+        echo ""
+        echo "Para configurar SSL agora, execute:"
+        echo "  sudo certbot --nginx -d $DOMAIN -d www.$DOMAIN --email $EMAIL --redirect"
+        echo ""
+    fi
+    
     show_final_info
 }
 
@@ -951,17 +1020,44 @@ EOF
     chown $USERNAME:$USERNAME /var/log/novusio
     
     # Iniciar aplicação com PM2
+    log "🚀 Iniciando aplicação com PM2..."
     sudo -u $USERNAME pm2 start ecosystem.config.js
     sudo -u $USERNAME pm2 save
-    sudo -u $USERNAME pm2 startup systemd -u $USERNAME --hp /home/$USERNAME
     
-    log "✓ PM2 configurado e aplicação iniciada"
+    # Configurar PM2 para iniciar no boot
+    log "⚙️ Configurando PM2 para iniciar automaticamente no boot..."
+    
+    # Obter o comando de startup
+    STARTUP_CMD=$(sudo -u $USERNAME pm2 startup systemd -u $USERNAME --hp /home/$USERNAME | grep "sudo env" | tail -1)
+    
+    if [[ -n "$STARTUP_CMD" ]]; then
+        log "📝 Executando comando de startup do PM2..."
+        eval $STARTUP_CMD
+        log "✓ PM2 startup configurado"
+    else
+        # Executar diretamente
+        env PATH=$PATH:/usr/bin /usr/lib/node_modules/pm2/bin/pm2 startup systemd -u $USERNAME --hp /home/$USERNAME
+    fi
+    
+    echo ""
+    echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo -e "${GREEN}✅ PM2 CONFIGURADO COM SUCESSO!${NC}"
+    echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo "  ✓ Aplicação iniciada em modo cluster"
+    echo "  ✓ Logs configurados em /var/log/novusio/"
+    echo "  ✓ Auto-restart habilitado"
+    echo "  ✓ Startup no boot configurado"
+    echo ""
+    
+    # Verificar status
+    sudo -u $USERNAME pm2 list
+    
+    echo ""
+    sleep 2
 }
 
 # Configurar Nginx
 setup_nginx() {
-    log "🌐 Configurando Nginx..."
-    
     echo ""
     echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
     echo -e "${BLUE}🌐 CONFIGURAÇÃO NGINX${NC}"
