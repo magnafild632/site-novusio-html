@@ -35,8 +35,15 @@ const db = require('./config/database');
 
 // Middleware
 app.use(cors());
-app.use(express.json({ limit: '50mb' }));
-app.use(express.urlencoded({ extended: true, limit: '50mb' }));
+app.use(express.json({ 
+    limit: '50mb',
+    timeout: '300s'
+}));
+app.use(express.urlencoded({ 
+    extended: true, 
+    limit: '50mb',
+    timeout: '300s'
+}));
 
 // Servir arquivos estáticos
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));

@@ -63,24 +63,34 @@ show_menu() {
     echo "7. 🔍 Diagnóstico Nginx (Upload 413)"
     echo "8. 🛠️  Corrigir Problemas de Upload"
     echo "9. 🔥 Forçar Atualização Completa (Upload 413)"
-    echo "10. ❌ Sair"
-    echo "11. ⚡ Atualização Rápida (não interativa)"
+    echo "10. 💥 Forçar Correções de Upload (413)"
+    echo "11. ❌ Sair"
+    echo "12. ⚡ Atualização Rápida (não interativa)"
     echo ""
-    read -p "Escolha uma opção [1-11]: " MENU_CHOICE
+    read -p "Escolha uma opção [1-12]: " MENU_CHOICE
 }
 
-# Atualização rápida (não interativa)
+# Atualização rápida (não interativa) - REFORÇADA
 quick_update() {
-    echo -e "${CYAN}⚡ ATUALIZAÇÃO RÁPIDA${NC}"
+    echo -e "${CYAN}⚡ ATUALIZAÇÃO RÁPIDA REFORÇADA${NC}"
     echo "=================================="
     
     if [[ ! -d "/home/novusio" ]]; then
         error "❌ Projeto não encontrado em /home/novusio"
     fi
     
-    log "📥 Atualizando código..."
+    log "📥 Forçando atualização completa do código..."
     cd /home/novusio
-    sudo -u novusio git pull --rebase || git pull
+    
+    # Corrigir permissões do Git primeiro
+    log "🔧 Corrigindo permissões do Git..."
+    git config --global --add safe.directory /home/novusio || true
+    sudo -u novusio git config --global --add safe.directory /home/novusio || true
+    
+    # Forçar atualização completa
+    git fetch --all
+    git reset --hard origin/main || git reset --hard origin/master
+    sudo -u novusio git pull origin main || sudo -u novusio git pull origin master
     
     log "📦 Instalando dependências (server)..."
     npm ci --production || npm install --production
@@ -88,6 +98,7 @@ quick_update() {
     if [[ -d "client" ]]; then
         log "📦 Instalando dependências (client) e build..."
         cd client
+        rm -rf dist node_modules
         npm ci || npm install
         npm run build
         cd ..
@@ -97,14 +108,31 @@ quick_update() {
     log "🌐 Atualizando configuração do Nginx..."
     if [[ -f "instalador/nginx.conf" ]]; then
         cp "instalador/nginx.conf" "/etc/nginx/sites-available/novusiopy"
-        # Recarregar nginx para aplicar mudanças
-        if nginx -t 2>/dev/null; then
-            systemctl reload nginx
-            sleep 2
-            systemctl restart nginx
-            log "✓ Configuração do Nginx atualizada e reiniciada com limites de upload corrigidos (50MB)"
+        # Fazer backup
+        if [[ -f "/etc/nginx/sites-available/novusiopy" ]]; then
+            cp "/etc/nginx/sites-available/novusiopy" "/etc/nginx/sites-available/novusiopy.backup.$(date +%Y%m%d_%H%M%S)"
+            log "✓ Backup da configuração criado"
+        fi
+        
+        # PARAR nginx completamente
+        systemctl stop nginx
+        log "✓ Nginx parado completamente"
+        
+        # Verificar se a configuração tem os limites corretos
+        if grep -q "client_max_body_size 50M" "/etc/nginx/sites-available/novusiopy"; then
+            log "✓ Configuração com limite de 50MB confirmada"
         else
-            warning "⚠️ Erro na configuração do Nginx, mas continuando..."
+            warning "⚠️ Limite de 50MB não encontrado na configuração!"
+        fi
+        
+        # Testar e reiniciar nginx
+        if nginx -t 2>/dev/null; then
+            systemctl start nginx
+            sleep 3
+            systemctl reload nginx
+            log "✓ Nginx reiniciado completamente com nova configuração"
+        else
+            error "❌ Erro crítico na configuração do Nginx!"
         fi
     fi
     
@@ -119,10 +147,24 @@ quick_update() {
         systemctl reload nginx 2>/dev/null || true
     fi
     
-    log "🔄 Reiniciando aplicação (PM2)..."
-    sudo -u novusio pm2 start ecosystem.config.js --env production || true
-    sudo -u novusio pm2 reload novusio-server || sudo -u novusio pm2 restart novusio-server || true
+    log "🔄 Forçando reinicialização completa da aplicação (PM2)..."
+    # Parar e deletar todos os processos PM2
+    sudo -u novusio pm2 stop all || true
+    sudo -u novusio pm2 delete all || true
+    
+    # Iniciar aplicação
+    sudo -u novusio pm2 start ecosystem.config.js --env production
     sudo -u novusio pm2 save
+    
+    # Verificar se está rodando
+    sleep 5
+    if sudo -u novusio pm2 list | grep -q "novusio-server.*online"; then
+        log "✓ Aplicação iniciada com sucesso"
+    else
+        log "⚠️ Tentando iniciar novamente..."
+        sudo -u novusio pm2 start ecosystem.config.js --env production
+        sudo -u novusio pm2 save
+    fi
     
     log "✅ Atualização rápida concluída!"
 }
@@ -242,9 +284,17 @@ update_application() {
     log "⏹️ Parando aplicação..."
     sudo -u novusio pm2 stop novusio-server || true
     
-    # Atualizar código
-    log "📥 Atualizando código do repositório..."
+    # Atualizar código FORÇADAMENTE
+    log "📥 Forçando atualização completa do código do repositório..."
+    
+    # Corrigir permissões do Git primeiro
+    log "🔧 Corrigindo permissões do Git..."
+    git config --global --add safe.directory /home/novusio || true
     sudo -u novusio git config --global --add safe.directory /home/novusio || true
+    
+    # Forçar atualização
+    git fetch --all
+    git reset --hard origin/main || git reset --hard origin/master
     sudo -u novusio git pull origin main || sudo -u novusio git pull origin master
     
     # Instalar dependências
@@ -252,8 +302,9 @@ update_application() {
     npm ci --production
     
     if [[ -d "client" ]]; then
-        log "📦 Instalando dependências do cliente..."
+        log "📦 Forçando instalação completa das dependências do cliente..."
         cd client
+        rm -rf dist node_modules
         npm ci
         npm run build
         cd ..
@@ -263,14 +314,31 @@ update_application() {
     log "🌐 Atualizando configuração do Nginx..."
     if [[ -f "instalador/nginx.conf" ]]; then
         cp "instalador/nginx.conf" "/etc/nginx/sites-available/novusiopy"
-        # Recarregar nginx para aplicar mudanças
-        if nginx -t 2>/dev/null; then
-            systemctl reload nginx
-            sleep 2
-            systemctl restart nginx
-            log "✓ Configuração do Nginx atualizada e reiniciada com limites de upload corrigidos (50MB)"
+        # Fazer backup
+        if [[ -f "/etc/nginx/sites-available/novusiopy" ]]; then
+            cp "/etc/nginx/sites-available/novusiopy" "/etc/nginx/sites-available/novusiopy.backup.$(date +%Y%m%d_%H%M%S)"
+            log "✓ Backup da configuração criado"
+        fi
+        
+        # PARAR nginx completamente
+        systemctl stop nginx
+        log "✓ Nginx parado completamente"
+        
+        # Verificar se a configuração tem os limites corretos
+        if grep -q "client_max_body_size 50M" "/etc/nginx/sites-available/novusiopy"; then
+            log "✓ Configuração com limite de 50MB confirmada"
         else
-            warning "⚠️ Erro na configuração do Nginx, mas continuando..."
+            warning "⚠️ Limite de 50MB não encontrado na configuração!"
+        fi
+        
+        # Testar e reiniciar nginx
+        if nginx -t 2>/dev/null; then
+            systemctl start nginx
+            sleep 3
+            systemctl reload nginx
+            log "✓ Nginx reiniciado completamente com nova configuração"
+        else
+            error "❌ Erro crítico na configuração do Nginx!"
         fi
     fi
     
@@ -320,15 +388,104 @@ EOF
         systemctl reload nginx 2>/dev/null || true
     fi
     
-    # Reiniciar aplicação
-    log "🔄 Reiniciando aplicação..."
-    sudo -u novusio pm2 start ecosystem.config.js || true
-    sudo -u novusio pm2 reload novusio-server || sudo -u novusio pm2 restart novusio-server || true
+    # Verificar e corrigir configurações do servidor
+    log "🔧 Verificando e corrigindo configurações do servidor..."
+    
+    # Verificar server.js
+    if [[ -f "server/server.js" ]]; then
+        if grep -q "limit: '50mb'" "server/server.js"; then
+            log "✓ server.js configurado com 50MB"
+        else
+            log "⚠️ Corrigindo server.js para 50MB..."
+            sed -i "s/limit: '[^']*'/limit: '50mb'/g" "server/server.js"
+        fi
+    fi
+    
+    # Verificar multer.js
+    if [[ -f "server/config/multer.js" ]]; then
+        if grep -q "50 \* 1024 \* 1024" "server/config/multer.js"; then
+            log "✓ multer.js configurado com 50MB"
+        else
+            log "⚠️ Corrigindo multer.js para 50MB..."
+            sed -i "s/fileSize: [0-9]* \* 1024 \* 1024/fileSize: 50 * 1024 * 1024/g" "server/config/multer.js"
+        fi
+    fi
+
+    # Forçar reinicialização completa da aplicação
+    log "🔄 Forçando reinicialização completa da aplicação..."
+    # Parar e deletar todos os processos PM2
+    sudo -u novusio pm2 stop all || true
+    sudo -u novusio pm2 delete all || true
+    
+    # Iniciar aplicação
+    sudo -u novusio pm2 start ecosystem.config.js
     sudo -u novusio pm2 save
     
-    # Verificar status
-    log "✅ Verificando status da aplicação..."
+    # Verificar se está rodando
     sleep 5
+    if sudo -u novusio pm2 list | grep -q "novusio-server.*online"; then
+        log "✓ Aplicação iniciada com sucesso"
+    else
+        log "⚠️ Tentando iniciar novamente..."
+        sudo -u novusio pm2 start ecosystem.config.js
+        sudo -u novusio pm2 save
+    fi
+    
+    # Verificação final completa
+    log "✅ Verificação final completa das configurações..."
+    sleep 5
+    
+    # Verificar conectividade
+    log "🌐 Testando conectividade..."
+    if curl -s -o /dev/null -w "HTTP Status: %{http_code}\n" http://localhost:3000/api/health 2>/dev/null | grep -q "200"; then
+        log "✓ API local funcionando (200)"
+    else
+        log "⚠️ API local pode ter problemas"
+    fi
+    
+    if curl -s -o /dev/null -w "HTTP Status: %{http_code}\n" http://localhost/api/health 2>/dev/null | grep -q "200"; then
+        log "✓ Nginx proxy funcionando (200)"
+    else
+        log "⚠️ Nginx proxy pode ter problemas"
+    fi
+    
+    # Relatório final das configurações
+    log "📊 Relatório final das configurações aplicadas:"
+    
+    # Verificar nginx global
+    if grep -q "client_max_body_size 50M" "/etc/nginx/sites-available/novusiopy"; then
+        log "✓ Nginx global: client_max_body_size 50M"
+    else
+        log "❌ Nginx global: NÃO configurado"
+    fi
+    
+    # Verificar nginx slides
+    if grep -A 5 "location /api/slides" "/etc/nginx/sites-available/novusiopy" | grep -q "client_max_body_size 50M"; then
+        log "✓ Nginx /api/slides: client_max_body_size 50M"
+    else
+        log "❌ Nginx /api/slides: NÃO configurado"
+    fi
+    
+    # Verificar nginx portfolio
+    if grep -A 5 "location /api/portfolio" "/etc/nginx/sites-available/novusiopy" | grep -q "client_max_body_size 50M"; then
+        log "✓ Nginx /api/portfolio: client_max_body_size 50M"
+    else
+        log "❌ Nginx /api/portfolio: NÃO configurado"
+    fi
+    
+    # Verificar server.js
+    if grep -q "limit: '50mb'" "server/server.js"; then
+        log "✓ Server.js: express.json limit 50mb"
+    else
+        log "❌ Server.js: NÃO configurado"
+    fi
+    
+    # Verificar multer.js
+    if grep -q "50 \* 1024 \* 1024" "server/config/multer.js"; then
+        log "✓ Multer: fileSize 50MB"
+    else
+        log "❌ Multer: NÃO configurado"
+    fi
     
     if sudo -u novusio pm2 list | grep -Eiq "novusio-server\s+.*online"; then
         log "✅ Aplicação atualizada e rodando com sucesso!"
@@ -678,6 +835,41 @@ force_complete_update() {
     else
         echo -e "${RED}❌ Script de atualização forçada não encontrado${NC}"
         echo "Execute manualmente: sudo ./instalador/forcar-atualizacao.sh"
+    fi
+}
+
+# Forçar correções de upload
+force_upload_fixes() {
+    echo -e "${CYAN}💥 FORÇAR CORREÇÕES DE UPLOAD${NC}"
+    echo "=================================="
+    echo "Este script irá FORÇAR:"
+    echo "  🔄 Atualização completa do código"
+    echo "  🛑 PARAR completamente Nginx e PM2"
+    echo "  📝 Aplicar configuração nginx.conf"
+    echo "  🔧 Verificar e corrigir TODAS as configurações"
+    echo "  🚀 Reiniciar todos os serviços"
+    echo "  ✅ Verificar se tudo está funcionando"
+    echo ""
+    echo -e "${RED}⚠️ ATENÇÃO: Esta operação é EXTREMAMENTE agressiva!${NC}"
+    echo "  • Vai PARAR todos os serviços"
+    echo "  • Vai FORÇAR a aplicação de todas as configurações"
+    echo "  • Vai VERIFICAR se cada configuração foi aplicada"
+    echo "  • Vai CORRIGIR automaticamente qualquer problema"
+    echo ""
+    read -p "Continuar com força total? (Y/n): " FORCE_UPLOAD
+    
+    if [[ "$FORCE_UPLOAD" =~ ^[Nn]$ ]]; then
+        echo -e "${YELLOW}❌ Correções forçadas canceladas${NC}"
+        return
+    fi
+    
+    # Executar script de correções forçadas se existir
+    if [[ -f "instalador/forcar-correcoes-upload.sh" ]]; then
+        log "💥 Executando correções forçadas..."
+        bash "instalador/forcar-correcoes-upload.sh"
+    else
+        echo -e "${RED}❌ Script de correções forçadas não encontrado${NC}"
+        echo "Execute manualmente: sudo ./instalador/forcar-correcoes-upload.sh"
     fi
 }
 
@@ -1100,7 +1292,7 @@ BACKUP_PATH=/opt/backups/novusio
 # CONFIGURAÇÕES ESPECÍFICAS DA APLICAÇÃO
 # =============================================================================
 # Tamanho máximo do body da requisição
-MAX_BODY_SIZE=10mb
+MAX_BODY_SIZE=50mb
 
 # Timeout das requisições
 REQUEST_TIMEOUT=30000
@@ -1111,8 +1303,8 @@ MAX_CONNECTIONS=1000
 # Configurações de upload específicas
 ALLOWED_IMAGE_TYPES=jpg,jpeg,png,gif,webp
 ALLOWED_DOCUMENT_TYPES=pdf,doc,docx,txt
-MAX_IMAGE_SIZE=5242880
-MAX_DOCUMENT_SIZE=10485760
+MAX_IMAGE_SIZE=52428800
+MAX_DOCUMENT_SIZE=52428800
 
 # =============================================================================
 # CONFIGURAÇÕES DE PERFORMANCE
@@ -1810,16 +2002,21 @@ main() {
                 read -p "Pressione Enter para voltar ao menu..."
                 ;;
             10)
+                force_upload_fixes
+                echo ""
+                read -p "Pressione Enter para voltar ao menu..."
+                ;;
+            11)
                 echo -e "${GREEN}👋 Até logo!${NC}"
                 exit 0
                 ;;
-            11)
+            12)
                 quick_update
                 echo ""
                 read -p "Pressione Enter para voltar ao menu..."
                 ;;
             *)
-                echo -e "${RED}❌ Opção inválida. Escolha entre 1-11.${NC}"
+                echo -e "${RED}❌ Opção inválida. Escolha entre 1-12.${NC}"
                 sleep 2
                 ;;
         esac

@@ -56,12 +56,14 @@ rm -rf dist
 echo -e "${GREEN}✓ Builds antigos removidos${NC}"
 
 echo ""
-echo -e "${BLUE}[3/6]${NC} Atualizando dependências..."
+echo -e "${BLUE}[3/6]${NC} Forçando atualização completa das dependências..."
+rm -rf node_modules package-lock.json
 npm ci --production
 cd client
+rm -rf node_modules package-lock.json
 npm ci
 cd ..
-echo -e "${GREEN}✓ Dependências atualizadas${NC}"
+echo -e "${GREEN}✓ Dependências atualizadas com força${NC}"
 
 echo ""
 echo -e "${BLUE}[4/6]${NC} Fazendo novo build..."
