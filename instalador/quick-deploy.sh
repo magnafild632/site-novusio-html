@@ -68,6 +68,8 @@ mkdir -p "/home/$USERNAME/uploads"
 if [[ -d "$PROJECT_DIR/uploads" ]]; then
     rsync -a --ignore-existing "$PROJECT_DIR/uploads/" "/home/$USERNAME/uploads/" || true
     chown -R $USERNAME:$USERNAME "/home/$USERNAME/uploads"
+    find "/home/$USERNAME/uploads" -type d -exec chmod 755 {} + 2>/dev/null || true
+    find "/home/$USERNAME/uploads" -type f -exec chmod 644 {} + 2>/dev/null || true
 fi
 
 echo -e "${YELLOW}⚙️ Configurando PM2...${NC}"
@@ -77,9 +79,9 @@ sudo -u $USERNAME pm2 save
 sudo -u $USERNAME pm2 startup systemd -u $USERNAME --hp /home/$USERNAME
 
 echo -e "${YELLOW}🌐 Configurando Nginx...${NC}"
-cp instalador/nginx.conf /etc/nginx/sites-available/novusio
-sed -i "s/novusio.com/$DOMAIN/g" /etc/nginx/sites-available/novusio
-ln -sf /etc/nginx/sites-available/novusio /etc/nginx/sites-enabled/
+cp instalador/nginx.conf /etc/nginx/sites-available/novusiopy
+sed -i "s/novusiopy.com/$DOMAIN/g" /etc/nginx/sites-available/novusiopy
+ln -sf /etc/nginx/sites-available/novusiopy /etc/nginx/sites-enabled/
 rm -f /etc/nginx/sites-enabled/default
 
 echo -e "${YELLOW}🔒 Configurando SSL...${NC}"

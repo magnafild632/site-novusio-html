@@ -267,14 +267,15 @@ EOF
     
     # Reiniciar aplicação
     log "🔄 Reiniciando aplicação..."
-    sudo -u novusio pm2 start ecosystem.config.js --env production
+    sudo -u novusio pm2 start ecosystem.config.js || true
+    sudo -u novusio pm2 reload novusio-server || sudo -u novusio pm2 restart novusio-server || true
     sudo -u novusio pm2 save
     
     # Verificar status
     log "✅ Verificando status da aplicação..."
     sleep 5
     
-    if pm2 list | grep -q "novusio-server.*online"; then
+    if sudo -u novusio pm2 list | grep -Eiq "novusio-server\s+.*online"; then
         log "✅ Aplicação atualizada e rodando com sucesso!"
     else
         error "❌ Falha ao iniciar a aplicação após atualização"
@@ -829,6 +830,11 @@ build_application() {
         log "⬆️  Sincronizando uploads do repositório para /home/$USERNAME/uploads..."
         rsync -a --ignore-existing "$PROJECT_DIR/uploads/" "/home/$USERNAME/uploads/" || true
         chown -R $USERNAME:$USERNAME "/home/$USERNAME/uploads"
+        # Garantir permissões para Nginx ler
+        find "/home/$USERNAME/uploads" -type d -exec chmod 755 {} + 2>/dev/null || true
+        find "/home/$USERNAME/uploads" -type f -exec chmod 644 {} + 2>/dev/null || true
+        # Recarregar Nginx para refletir alias
+        systemctl reload nginx 2>/dev/null || true
     fi
 }
 
