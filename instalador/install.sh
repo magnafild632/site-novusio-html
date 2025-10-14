@@ -30,15 +30,18 @@ print_error() {
 }
 
 # Verificar se está rodando como root
-if [[ $EUID -eq 0 ]]; then
-   print_error "Este script não deve ser executado como root diretamente. Use sudo."
+if [[ $EUID -ne 0 ]]; then
+   print_error "Este script deve ser executado como root."
    exit 1
 fi
 
-# Verificar se sudo está disponível
-if ! command -v sudo &> /dev/null; then
-    print_error "sudo não está instalado. Instale sudo primeiro."
-    exit 1
+# Definir comandos baseados no usuário
+if [[ $EUID -eq 0 ]]; then
+    SUDO_CMD=""
+    USER_CMD=""
+else
+    SUDO_CMD="sudo "
+    USER_CMD="sudo -u novusio "
 fi
 
 # Função para gerar string aleatória
@@ -91,7 +94,7 @@ configure_env_automatically() {
     SESSION_SECRET=$(generate_random_string 64)
     
     # Criar arquivo .env
-    sudo tee /opt/novusio/.env > /dev/null << EOF
+    tee /opt/novusio/.env > /dev/null << EOF
 # 🔧 Configuração de Produção - Site Novusio
 # Gerado automaticamente em $(date)
 
@@ -190,8 +193,8 @@ CSRF_PROTECTION=true
 EOF
     
     # Definir permissões
-    sudo chown novusio:novusio /opt/novusio/.env
-    sudo chmod 600 /opt/novusio/.env
+    chown novusio:novusio /opt/novusio/.env
+    chmod 600 /opt/novusio/.env
     
     print_success "Arquivo .env configurado automaticamente"
     print_success "Domínio: $DOMAIN"
@@ -203,16 +206,16 @@ print_status "🚀 Iniciando instalação do Site Novusio..."
 
 # Atualizar sistema
 print_status "📦 Atualizando sistema..."
-sudo apt update && sudo apt upgrade -y
+apt update && apt upgrade -y
 
 # Instalar dependências básicas
 print_status "🔧 Instalando dependências básicas..."
-sudo apt install -y curl wget git unzip software-properties-common apt-transport-https ca-certificates gnupg lsb-release
+apt install -y curl wget git unzip software-properties-common apt-transport-https ca-certificates gnupg lsb-release
 
 # Instalar Node.js 18
 print_status "📦 Instalando Node.js 18..."
-curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
-sudo apt install -y nodejs
+curl -fsSL https://deb.nodesource.com/setup_18.x | bash -
+apt install -y nodejs
 
 # Verificar versão do Node.js
 NODE_VERSION=$(node --version)
@@ -220,32 +223,32 @@ print_success "Node.js instalado: $NODE_VERSION"
 
 # Instalar PM2 globalmente
 print_status "⚡ Instalando PM2..."
-sudo npm install -g pm2
+npm install -g pm2
 
 # Instalar Nginx
 print_status "🌐 Instalando Nginx..."
-sudo apt install -y nginx
+apt install -y nginx
 
 # Instalar Certbot
 print_status "🔒 Instalando Certbot..."
-sudo apt install -y certbot python3-certbot-nginx
+apt install -y certbot python3-certbot-nginx
 
 # Instalar Fail2ban
 print_status "🛡️ Instalando Fail2ban..."
-sudo apt install -y fail2ban
+apt install -y fail2ban
 
 # Instalar UFW Firewall
 print_status "🔥 Configurando Firewall UFW..."
-sudo ufw --force enable
-sudo ufw default deny incoming
-sudo ufw default allow outgoing
-sudo ufw allow ssh
-sudo ufw allow 'Nginx Full'
+ufw --force enable
+ufw default deny incoming
+ufw default allow outgoing
+ufw allow ssh
+ufw allow 'Nginx Full'
 
 # Criar usuário para aplicação
 print_status "👤 Configurando usuário da aplicação..."
 if ! id "novusio" &>/dev/null; then
-    sudo useradd -r -s /bin/false -d /opt/novusio novusio
+    useradd -r -s /bin/false -d /opt/novusio novusio
     print_success "Usuário 'novusio' criado"
 else
     print_warning "Usuário 'novusio' já existe"
@@ -253,26 +256,26 @@ fi
 
 # Criar diretório da aplicação
 print_status "📁 Criando estrutura de diretórios..."
-sudo mkdir -p /opt/novusio
-sudo mkdir -p /opt/novusio/logs
-sudo mkdir -p /opt/novusio/backups
-sudo mkdir -p /var/log/novusio
+mkdir -p /opt/novusio
+mkdir -p /opt/novusio/logs
+mkdir -p /opt/novusio/backups
+mkdir -p /var/log/novusio
 
 # Definir permissões
-sudo chown -R novusio:novusio /opt/novusio
-sudo chown -R novusio:novusio /var/log/novusio
+chown -R novusio:novusio /opt/novusio
+chown -R novusio:novusio /var/log/novusio
 
 # Copiar arquivos da aplicação
 print_status "📋 Copiando arquivos da aplicação..."
-sudo cp -r . /opt/novusio/app/
-sudo chown -R novusio:novusio /opt/novusio/app
+cp -r . /opt/novusio/app/
+chown -R novusio:novusio /opt/novusio/app
 
 # Instalar dependências da aplicação
 print_status "📦 Instalando dependências da aplicação..."
 cd /opt/novusio/app
-sudo -u novusio npm install
-sudo -u novusio npm run client:install
-sudo -u novusio npm run build
+su -s /bin/bash novusio -c "npm install"
+su -s /bin/bash novusio -c "npm run client:install"
+su -s /bin/bash novusio -c "npm run build"
 
 # Configurar .env automaticamente
 print_status "⚙️ Configurando variáveis de ambiente..."
@@ -280,14 +283,14 @@ configure_env_automatically
 
 # Configurar Nginx
 print_status "🌐 Configurando Nginx..."
-sudo cp instalador/nginx.conf /etc/nginx/sites-available/novusio
-sudo ln -sf /etc/nginx/sites-available/novusio /etc/nginx/sites-enabled/
-sudo rm -f /etc/nginx/sites-enabled/default
+cp instalador/nginx.conf /etc/nginx/sites-available/novusio
+ln -sf /etc/nginx/sites-available/novusio /etc/nginx/sites-enabled/
+rm -f /etc/nginx/sites-enabled/default
 
 # Testar configuração do Nginx
-if sudo nginx -t; then
+if nginx -t; then
     print_success "Configuração do Nginx válida"
-    sudo systemctl reload nginx
+    systemctl reload nginx
 else
     print_error "Erro na configuração do Nginx"
     exit 1
@@ -295,25 +298,25 @@ fi
 
 # Configurar Fail2ban
 print_status "🛡️ Configurando Fail2ban..."
-sudo cp instalador/fail2ban.conf /etc/fail2ban/jail.local
-sudo cp instalador/fail2ban-filters.conf /etc/fail2ban/filter.d/novusio.conf
+cp instalador/fail2ban.conf /etc/fail2ban/jail.local
+cp instalador/fail2ban-filters.conf /etc/fail2ban/filter.d/novusio.conf
 
 # Configurar PM2
 print_status "⚡ Configurando PM2..."
-sudo cp instalador/ecosystem.config.js /opt/novusio/
-sudo chown novusio:novusio /opt/novusio/ecosystem.config.js
+cp instalador/ecosystem.config.js /opt/novusio/
+chown novusio:novusio /opt/novusio/ecosystem.config.js
 
 # Configurar systemd
 print_status "🔄 Configurando systemd..."
-sudo cp instalador/novusio.service /etc/systemd/system/
-sudo systemctl daemon-reload
-sudo systemctl enable novusio
+cp instalador/novusio.service /etc/systemd/system/
+systemctl daemon-reload
+systemctl enable novusio
 
 # Configurar backup automático
 print_status "💾 Configurando backup automático..."
-sudo cp instalador/backup.sh /opt/novusio/
-sudo chmod +x /opt/novusio/backup.sh
-sudo chown novusio:novusio /opt/novusio/backup.sh
+cp instalador/backup.sh /opt/novusio/
+chmod +x /opt/novusio/backup.sh
+chown novusio:novusio /opt/novusio/backup.sh
 
 # Adicionar cron job para backup
 (crontab -u novusio -l 2>/dev/null; echo "0 2 * * * /opt/novusio/backup.sh") | crontab -u novusio -
@@ -321,35 +324,35 @@ sudo chown novusio:novusio /opt/novusio/backup.sh
 # Inicializar banco de dados
 print_status "🗄️ Inicializando banco de dados..."
 cd /opt/novusio/app
-sudo -u novusio NODE_ENV=production npm run init-db
+su -s /bin/bash novusio -c "NODE_ENV=production npm run init-db"
 
 # Iniciar serviços
 print_status "🚀 Iniciando serviços..."
-sudo systemctl start fail2ban
-sudo systemctl enable fail2ban
-sudo systemctl start nginx
-sudo systemctl enable nginx
+systemctl start fail2ban
+systemctl enable fail2ban
+systemctl start nginx
+systemctl enable nginx
 
 # Iniciar aplicação
 print_status "🚀 Iniciando aplicação..."
-sudo systemctl start novusio
+systemctl start novusio
 
 # Aguardar aplicação inicializar
 print_status "⏳ Aguardando aplicação inicializar..."
 sleep 5
 
 # Verificar se aplicação está rodando
-if sudo systemctl is-active --quiet novusio; then
+if systemctl is-active --quiet novusio; then
     print_success "✅ Aplicação iniciada com sucesso"
 else
     print_warning "⚠️ Aplicação pode não ter iniciado corretamente"
-    print_status "Verifique os logs: sudo journalctl -u novusio -f"
+    print_status "Verifique os logs: journalctl -u novusio -f"
 fi
 
 # Criar script de gerenciamento
 print_status "📝 Criando script de gerenciamento..."
-sudo cp instalador/novusio-manager.sh /usr/local/bin/novusio-manager
-sudo chmod +x /usr/local/bin/novusio-manager
+cp instalador/novusio-manager.sh /usr/local/bin/novusio-manager
+chmod +x /usr/local/bin/novusio-manager
 
 print_success "🎉 Instalação concluída com sucesso!"
 echo ""
@@ -358,10 +361,10 @@ echo ""
 print_status "📋 Próximos passos:"
 echo ""
 echo "1. 🔒 Configure SSL com Certbot:"
-echo "   sudo ./instalador/setup-ssl.sh"
+echo "   ./instalador/setup-ssl.sh"
 echo ""
 echo "2. 📊 Verificar status:"
-echo "   sudo systemctl status novusio"
+echo "   systemctl status novusio"
 echo ""
 echo "3. 🔍 Verificar sistema completo:"
 echo "   ./instalador/verificar-sistema.sh"
@@ -371,12 +374,12 @@ echo ""
 print_status "🔧 Comandos úteis:"
 echo ""
 echo "• Gerenciar aplicação: novusio-manager [start|stop|restart|status|logs]"
-echo "• Ver logs: sudo journalctl -u novusio -f"
-echo "• Backup manual: sudo /opt/novusio/backup.sh"
-echo "• Status Nginx: sudo systemctl status nginx"
+echo "• Ver logs: journalctl -u novusio -f"
+echo "• Backup manual: /opt/novusio/backup.sh"
+echo "• Status Nginx: systemctl status nginx"
 echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
 print_success "✅ Arquivo .env já foi configurado automaticamente!"
-print_status "📝 Para editar configurações: sudo nano /opt/novusio/.env"
+print_status "📝 Para editar configurações: nano /opt/novusio/.env"
 echo ""

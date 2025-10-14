@@ -39,7 +39,7 @@ cd site-novusio-html
 # Tornar scripts executáveis
 chmod +x instalador/*.sh
 
-# Executar menu principal
+# Executar menu principal (como root)
 ./instalador/menu-principal.sh
 ```
 
@@ -49,15 +49,15 @@ chmod +x instalador/*.sh
 # Tornar o script executável
 chmod +x instalador/install.sh
 
-# Executar instalação
-sudo ./instalador/install.sh
+# Executar instalação (como root)
+./instalador/install.sh
 ```
 
 ### 4. Configurar SSL
 
 ```bash
-# Executar configuração SSL
-sudo ./instalador/setup-ssl.sh
+# Executar configuração SSL (como root)
+./instalador/setup-ssl.sh
 ```
 
 ### 5. Verificar sistema
@@ -72,10 +72,10 @@ sudo ./instalador/setup-ssl.sh
 ```bash
 # A aplicação já foi iniciada automaticamente
 # Verificar status
-sudo systemctl status novusio
+systemctl status novusio
 
 # Se necessário, reiniciar
-sudo systemctl restart novusio
+systemctl restart novusio
 ```
 
 ## 📁 Estrutura dos Arquivos
@@ -127,19 +127,19 @@ O menu principal oferece uma interface amigável para todas as operações:
 
 ```bash
 # Status da aplicação
-sudo systemctl status novusio
+systemctl status novusio
 
 # Parar aplicação
-sudo systemctl stop novusio
+systemctl stop novusio
 
 # Iniciar aplicação
-sudo systemctl start novusio
+systemctl start novusio
 
 # Reiniciar aplicação
-sudo systemctl restart novusio
+systemctl restart novusio
 
 # Ver logs
-sudo journalctl -u novusio -f
+journalctl -u novusio -f
 ```
 
 ### PM2 (alternativo)
@@ -165,23 +165,23 @@ pm2 logs novusio
 
 ```bash
 # Testar configuração
-sudo nginx -t
+nginx -t
 
 # Recarregar configuração
-sudo systemctl reload nginx
+systemctl reload nginx
 
 # Status
-sudo systemctl status nginx
+systemctl status nginx
 ```
 
 ### SSL
 
 ```bash
 # Renovar certificados
-sudo certbot renew
+certbot renew
 
 # Testar renovação
-sudo certbot renew --dry-run
+certbot renew --dry-run
 ```
 
 ## 🔒 Segurança

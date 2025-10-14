@@ -29,8 +29,8 @@ print_error() {
 }
 
 # Verificar se está rodando como root
-if [[ $EUID -eq 0 ]]; then
-   print_error "Este script não deve ser executado como root diretamente. Use sudo."
+if [[ $EUID -ne 0 ]]; then
+   print_error "Este script deve ser executado como root."
    exit 1
 fi
 
@@ -77,13 +77,13 @@ print_status "📧 Email para notificações: $EMAIL"
 
 # Atualizar configuração do Nginx com o domínio
 print_status "📝 Atualizando configuração do Nginx..."
-sudo sed -i "s/your-domain\.com/$DOMAIN/g" /etc/nginx/sites-available/novusio
-sudo sed -i "s/www\.your-domain\.com/www.$DOMAIN/g" /etc/nginx/sites-available/novusio
+sed -i "s/your-domain\.com/$DOMAIN/g" /etc/nginx/sites-available/novusio
+sed -i "s/www\.your-domain\.com/www.$DOMAIN/g" /etc/nginx/sites-available/novusio
 
 # Testar configuração do Nginx
-if sudo nginx -t; then
+if nginx -t; then
     print_success "Configuração do Nginx válida"
-    sudo systemctl reload nginx
+    systemctl reload nginx
 else
     print_error "Erro na configuração do Nginx"
     exit 1
@@ -108,20 +108,20 @@ fi
 
 # Obter certificado SSL
 print_status "🔒 Obtendo certificado SSL..."
-sudo certbot --nginx -d $DOMAIN --email $EMAIL --agree-tos --non-interactive --redirect
+certbot --nginx -d $DOMAIN --email $EMAIL --agree-tos --non-interactive --redirect
 
 # Configurar renovação automática
 print_status "🔄 Configurando renovação automática..."
-if sudo crontab -l 2>/dev/null | grep -q "certbot renew"; then
+if crontab -l 2>/dev/null | grep -q "certbot renew"; then
     print_warning "Renovação automática já configurada"
 else
-    (sudo crontab -l 2>/dev/null; echo "0 12 * * * /usr/bin/certbot renew --quiet") | sudo crontab -
+    (crontab -l 2>/dev/null; echo "0 12 * * * /usr/bin/certbot renew --quiet") | crontab -
     print_success "Renovação automática configurada"
 fi
 
 # Testar renovação
 print_status "🧪 Testando renovação automática..."
-if sudo certbot renew --dry-run; then
+if certbot renew --dry-run; then
     print_success "✅ Teste de renovação bem-sucedido"
 else
     print_warning "⚠️ Teste de renovação falhou"
@@ -129,11 +129,11 @@ fi
 
 # Atualizar arquivo .env com o domínio
 print_status "⚙️ Atualizando arquivo .env..."
-sudo sed -i "s/DOMAIN=your-domain.com/DOMAIN=$DOMAIN/g" /opt/novusio/.env
+sed -i "s/DOMAIN=your-domain.com/DOMAIN=$DOMAIN/g" /opt/novusio/.env
 
 # Configurar headers de segurança adicionais
 print_status "🛡️ Configurando headers de segurança..."
-sudo tee -a /etc/nginx/sites-available/novusio > /dev/null << 'EOF'
+tee -a /etc/nginx/sites-available/novusio > /dev/null << 'EOF'
 
     # Headers de segurança adicionais
     add_header X-Frame-Options "SAMEORIGIN" always;
@@ -144,8 +144,8 @@ sudo tee -a /etc/nginx/sites-available/novusio > /dev/null << 'EOF'
 EOF
 
 # Recarregar Nginx
-if sudo nginx -t; then
-    sudo systemctl reload nginx
+if nginx -t; then
+    systemctl reload nginx
     print_success "Nginx recarregado com headers de segurança"
 else
     print_error "Erro na configuração do Nginx"
@@ -154,7 +154,7 @@ fi
 
 # Verificar status do SSL
 print_status "🔍 Verificando status do SSL..."
-if sudo certbot certificates | grep -q "$DOMAIN"; then
+if certbot certificates | grep -q "$DOMAIN"; then
     print_success "✅ Certificado SSL instalado com sucesso"
 else
     print_error "❌ Erro na instalação do certificado SSL"
@@ -185,13 +185,13 @@ echo "━━━━━━━━━━━━━━━━━━━━━━━━�
 echo ""
 print_status "🔧 Comandos úteis:"
 echo ""
-echo "• Ver certificados: sudo certbot certificates"
-echo "• Renovar manualmente: sudo certbot renew"
-echo "• Testar renovação: sudo certbot renew --dry-run"
+echo "• Ver certificados: certbot certificates"
+echo "• Renovar manualmente: certbot renew"
+echo "• Testar renovação: certbot renew --dry-run"
 echo "• Status SSL: curl -I https://$DOMAIN"
 echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
 print_status "🚀 Agora você pode iniciar a aplicação:"
-echo "sudo systemctl start novusio"
+echo "systemctl start novusio"
 echo ""
