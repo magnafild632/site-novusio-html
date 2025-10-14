@@ -50,6 +50,7 @@ print_menu() {
     echo -e "${CYAN}📋 OPÇÕES DISPONÍVEIS:${NC}"
     echo ""
 echo -e "${GREEN}1.${NC} 🆕 ${YELLOW}Instalação Completa (Do Zero)${NC}"
+echo -e "   • Configurar domínio, email e Git"
 echo -e "   • Instalar Node.js, Nginx, PM2, Fail2ban"
 echo -e "   • Configurar firewall e segurança"
 echo -e "   • Configurar .env automaticamente"
@@ -59,10 +60,10 @@ echo -e "   • Configurar .env automaticamente"
     echo -e "   • Reinstalar dependências"
     echo -e "   • Reiniciar serviços"
     echo ""
-    echo -e "${GREEN}3.${NC} ⚙️  ${YELLOW}Configurar .env${NC}"
-    echo -e "   • Configurar variáveis de ambiente"
-    echo -e "   • Gerar secrets seguros"
-    echo -e "   • Validar configuração"
+    echo -e "${GREEN}3.${NC} ⚙️  ${YELLOW}Configurar Sistema${NC}"
+    echo -e "   • Configurar domínio, email e Git"
+    echo -e "   • Editar variáveis de ambiente"
+    echo -e "   • Gerar novos secrets"
     echo ""
     echo -e "${GREEN}4.${NC} 🔒 ${YELLOW}Configurar SSL${NC}"
     echo -e "   • Instalar certificados SSL"
@@ -83,7 +84,12 @@ echo -e "   • Configurar .env automaticamente"
     echo -e "   • Verificar configurações"
     echo -e "   • Testar conectividade"
     echo ""
-    echo -e "${GREEN}8.${NC} 🆘 ${YELLOW}Suporte e Logs${NC}"
+    echo -e "${GREEN}8.${NC} 🔧 ${YELLOW}Diagnóstico e Correção${NC}"
+    echo -e "   • Diagnosticar problemas"
+    echo -e "   • Corrigir locks do APT"
+    echo -e "   • Verificar sistema"
+    echo ""
+    echo -e "${GREEN}9.${NC} 🆘 ${YELLOW}Suporte e Logs${NC}"
     echo -e "   • Ver logs de erro"
     echo -e "   • Informações de sistema"
     echo -e "   • Comandos de diagnóstico"
@@ -201,71 +207,48 @@ update_app() {
     fi
 }
 
-# Função para configurar .env
-configure_env() {
+# Função para configurar sistema
+configure_system() {
     print_title
-    echo -e "${YELLOW}⚙️ CONFIGURAR .ENV${NC}"
+    echo -e "${YELLOW}⚙️ CONFIGURAR SISTEMA${NC}"
     echo ""
     
-    # Verificar se já existe .env
-    if [[ -f "/opt/novusio/.env" ]]; then
-        print_status "Arquivo .env encontrado"
-        read -p "Editar arquivo .env existente? (y/N): " edit_existing
-        
-        if [[ "$edit_existing" == "y" || "$edit_existing" == "Y" ]]; then
+    echo "1. 🔧 Configurar Domínio, Email e Git"
+    echo "2. 📝 Editar arquivo .env manualmente"
+    echo "3. 🔐 Gerar novos secrets"
+    echo "0. 🚪 Voltar"
+    echo ""
+    read -p "Opção: " config_option
+    
+    case $config_option in
+        1)
+            print_status "Executando gerenciador de configurações..."
+            if [[ -f "./config-manager.sh" ]]; then
+                chmod +x ./config-manager.sh
+                ./config-manager.sh
+            else
+                print_error "Gerenciador de configurações não encontrado"
+            fi
+            ;;
+        2)
+            print_status "Editando arquivo .env existente..."
             nano /opt/novusio/.env
-        else
-            print_status "Criando novo arquivo .env..."
-        fi
-    else
-        print_status "Criando arquivo .env..."
-    fi
-    
-    # Perguntar se quer gerar secrets automaticamente
-    echo ""
-    read -p "Gerar secrets seguros automaticamente? (Y/n): " generate_secrets
-    
-    if [[ "$generate_secrets" != "n" && "$generate_secrets" != "N" ]]; then
-        print_status "Gerando secrets seguros..."
-        
-        if [[ -f "./regenerate-secrets.sh" ]]; then
-            ./regenerate-secrets.sh
-        else
-            print_warning "Script de geração de secrets não encontrado"
-        fi
-    fi
-    
-    # Configurar variáveis básicas
-    echo ""
-    print_status "Configurando variáveis básicas..."
-    
-    # DOMAIN
-    read -p "Digite o domínio (ex: exemplo.com): " domain
-    if [[ -n "$domain" ]]; then
-        sed -i "s/DOMAIN=your-domain.com/DOMAIN=$domain/g" /opt/novusio/.env 2>/dev/null || true
-        echo "DOMAIN=$domain" | tee -a /opt/novusio/.env > /dev/null
-    fi
-    
-    # EMAIL
-    read -p "Digite o email para notificações: " email
-    if [[ -n "$email" ]]; then
-        sed -i "s/EMAIL=seu-email@exemplo.com/EMAIL=$email/g" /opt/novusio/.env 2>/dev/null || true
-        echo "EMAIL=$email" | tee -a /opt/novusio/.env > /dev/null
-    fi
-    
-    # NODE_ENV
-    echo "NODE_ENV=production" | tee -a /opt/novusio/.env > /dev/null
-    
-    # PORT
-    echo "PORT=3000" | tee -a /opt/novusio/.env > /dev/null
-    
-    # Definir permissões
-    chown novusio:novusio /opt/novusio/.env
-    chmod 600 /opt/novusio/.env
-    
-    print_success "Arquivo .env configurado!"
-    echo ""
-    print_status "Para editar manualmente: nano /opt/novusio/.env"
+            ;;
+        3)
+            print_status "Gerando novos secrets..."
+            if [[ -f "./regenerate-secrets.sh" ]]; then
+                ./regenerate-secrets.sh
+            else
+                print_warning "Script de geração de secrets não encontrado"
+            fi
+            ;;
+        0)
+            return
+            ;;
+        *)
+            print_error "Opção inválida"
+            ;;
+    esac
 }
 
 # Função para configurar SSL
@@ -382,6 +365,63 @@ manage_services() {
         5)
             print_status "Logs em tempo real (Ctrl+C para sair):"
             journalctl -u novusio -f
+            ;;
+        0)
+            return
+            ;;
+        *)
+            print_error "Opção inválida"
+            ;;
+    esac
+}
+
+# Função para diagnóstico e correção
+diagnose_and_fix() {
+    print_title
+    echo -e "${YELLOW}🔧 DIAGNÓSTICO E CORREÇÃO${NC}"
+    echo ""
+    
+    echo "1. 🔍 Diagnosticar problemas"
+    echo "2. 🔒 Corrigir locks do APT"
+    echo "3. 📦 Verificar pacotes essenciais"
+    echo "4. 🔄 Reiniciar serviços"
+    echo "0. 🚪 Voltar"
+    echo ""
+    read -p "Opção: " diag_option
+    
+    case $diag_option in
+        1)
+            print_status "Executando diagnóstico..."
+            if [[ -f "./diagnostico.sh" ]]; then
+                chmod +x ./diagnostico.sh
+                ./diagnostico.sh
+            else
+                print_error "Script de diagnóstico não encontrado"
+            fi
+            ;;
+        2)
+            print_status "Corrigindo locks do APT..."
+            if [[ -f "./fix-apt-lock.sh" ]]; then
+                chmod +x ./fix-apt-lock.sh
+                ./fix-apt-lock.sh
+            else
+                print_error "Script de correção não encontrado"
+            fi
+            ;;
+        3)
+            print_status "Verificando pacotes essenciais..."
+            apt update
+            apt install -y curl wget git unzip software-properties-common apt-transport-https ca-certificates gnupg lsb-release nodejs npm nginx certbot python3-certbot-nginx fail2ban
+            print_success "Pacotes verificados"
+            ;;
+        4)
+            print_status "Reiniciando serviços..."
+            systemctl restart nginx
+            systemctl restart fail2ban
+            if systemctl list-unit-files | grep -q "^novusio.service"; then
+                systemctl restart novusio
+            fi
+            print_success "Serviços reiniciados"
             ;;
         0)
             return
@@ -535,9 +575,9 @@ main() {
             2)
                 update_app
                 ;;
-            3)
-                configure_env
-                ;;
+        3)
+            configure_system
+            ;;
             4)
                 configure_ssl
                 ;;
@@ -551,6 +591,9 @@ main() {
                 verify_system
                 ;;
             8)
+                diagnose_and_fix
+                ;;
+            9)
                 support_logs
                 ;;
             0)
@@ -563,7 +606,7 @@ main() {
                 exit 0
                 ;;
             *)
-                print_error "Opção inválida. Digite um número de 0 a 8."
+                print_error "Opção inválida. Digite um número de 0 a 9."
                 ;;
         esac
         

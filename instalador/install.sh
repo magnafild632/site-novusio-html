@@ -51,47 +51,99 @@ generate_random_string() {
     cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w $length | head -n 1
 }
 
+# Função para aguardar apt
+wait_for_apt() {
+    while pgrep apt > /dev/null; do
+        print_warning "Aguardando processo apt finalizar..."
+        sleep 5
+    done
+}
+
+# Função para carregar configuração
+load_config() {
+    local config_file="/opt/novusio/config.conf"
+    if [[ -f "$config_file" ]]; then
+        source "$config_file"
+        print_success "Configuração carregada de $config_file"
+        return 0
+    else
+        print_warning "Arquivo de configuração não encontrado: $config_file"
+        return 1
+    fi
+}
+
 # Função para configurar .env automaticamente
 configure_env_automatically() {
     print_status "Configurando arquivo .env automaticamente..."
     
-    # Solicitar informações básicas
-    echo ""
-    print_status "📝 Configuração do domínio e email"
-    echo ""
-    
-    # DOMAIN
-    while true; do
-        read -p "Digite seu domínio (ex: exemplo.com): " DOMAIN
-        if [[ -n "$DOMAIN" ]]; then
-            if [[ $DOMAIN =~ ^[a-zA-Z0-9][a-zA-Z0-9-]{1,61}[a-zA-Z0-9]\.[a-zA-Z]{2,}$ ]]; then
-                break
+    # Tentar carregar configuração existente
+    if ! load_config; then
+        print_status "Executando configuração inicial..."
+        
+        # Solicitar informações básicas
+        echo ""
+        print_status "📝 Configuração do domínio e email"
+        echo ""
+        
+        # DOMAIN
+        while true; do
+            read -p "Digite seu domínio (ex: exemplo.com): " DOMAIN
+            if [[ -n "$DOMAIN" ]]; then
+                if [[ $DOMAIN =~ ^[a-zA-Z0-9][a-zA-Z0-9-]{1,61}[a-zA-Z0-9]\.[a-zA-Z]{2,}$ ]]; then
+                    break
+                else
+                    print_error "Formato de domínio inválido"
+                fi
             else
-                print_error "Formato de domínio inválido"
+                print_warning "Domínio é obrigatório"
             fi
-        else
-            print_warning "Domínio é obrigatório"
-        fi
-    done
-    
-    # EMAIL
-    while true; do
-        read -p "Digite seu email para notificações: " EMAIL
-        if [[ -n "$EMAIL" ]]; then
-            if [[ $EMAIL =~ ^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$ ]]; then
-                break
+        done
+        
+        # EMAIL
+        while true; do
+            read -p "Digite seu email para notificações: " EMAIL
+            if [[ -n "$EMAIL" ]]; then
+                if [[ $EMAIL =~ ^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$ ]]; then
+                    break
+                else
+                    print_error "Formato de email inválido"
+                fi
             else
-                print_error "Formato de email inválido"
+                print_warning "Email é obrigatório"
             fi
-        else
-            print_warning "Email é obrigatório"
+        done
+        
+        # Configurar Git se solicitado
+        echo ""
+        read -p "Configurar Git para deploy automático? (y/N): " configure_git
+        if [[ "$configure_git" == "y" || "$configure_git" == "Y" ]]; then
+            read -p "Digite a URL do repositório Git: " GIT_REPOSITORY
+            read -p "Digite a branch principal (padrão: main): " GIT_BRANCH
+            GIT_BRANCH=${GIT_BRANCH:-main}
+            
+            read -p "Digite seu username do Git (opcional): " GIT_USERNAME
+            read -p "Digite seu token do Git (opcional): " GIT_TOKEN
         fi
-    done
+        
+        # Salvar configuração
+        print_status "Salvando configuração..."
+        save_config_to_file
+    else
+        print_status "Usando configuração existente"
+        print_status "Domínio: $DOMAIN"
+        print_status "Email: $EMAIL"
+        if [[ -n "$GIT_REPOSITORY" ]]; then
+            print_status "Repositório Git: $GIT_REPOSITORY"
+        fi
+    fi
     
     # Gerar secrets
     print_status "Gerando secrets seguros..."
     JWT_SECRET=$(generate_random_string 64)
     SESSION_SECRET=$(generate_random_string 64)
+    
+    # Configurar CORS_ORIGIN
+    CORS_ORIGIN="https://$DOMAIN"
     
     # Criar arquivo .env
     tee /opt/novusio/.env > /dev/null << EOF
@@ -202,10 +254,156 @@ EOF
     echo ""
 }
 
+# Função para salvar configuração
+save_config_to_file() {
+    local config_file="/opt/novusio/config.conf"
+    
+    # Criar diretório se não existir
+    mkdir -p /opt/novusio
+    
+    # Salvar configuração
+    cat > "$config_file" << EOF
+# 🔧 Configuração Persistente - Site Novusio
+# Gerado em $(date)
+
+# Configurações do Domínio
+DOMAIN="$DOMAIN"
+EMAIL="$EMAIL"
+
+# Configurações do Git
+GIT_REPOSITORY="$GIT_REPOSITORY"
+GIT_BRANCH="$GIT_BRANCH"
+GIT_USERNAME="$GIT_USERNAME"
+GIT_TOKEN="$GIT_TOKEN"
+
+# Configurações do Servidor
+SERVER_IP=""
+SERVER_NAME=""
+
+# Configurações de Deploy
+DEPLOY_METHOD="git"
+BACKUP_ENABLED="true"
+AUTO_UPDATE="false"
+
+# Configurações de SSL
+SSL_AUTO_RENEW="true"
+SSL_EMAIL="$EMAIL"
+
+# Configurações de Backup
+BACKUP_SCHEDULE="0 2 * * *"
+BACKUP_RETENTION_DAYS="30"
+
+# Configurações de Monitoramento
+MONITORING_ENABLED="true"
+ALERT_EMAIL="$EMAIL"
+
+# Configurações de Performance
+NODE_ENV="production"
+PORT="3000"
+WORKER_PROCESSES="1"
+
+# Configurações de Segurança
+FAIL2BAN_ENABLED="true"
+UFW_ENABLED="true"
+FIREWALL_PORTS="22,80,443"
+
+# Configurações de Logs
+LOG_LEVEL="info"
+LOG_ROTATION="daily"
+LOG_RETENTION_DAYS="7"
+
+# Configurações de Cache
+CACHE_ENABLED="true"
+CACHE_TTL="3600"
+
+# Configurações de Database
+DB_TYPE="sqlite"
+DB_PATH="/opt/novusio/app/database.sqlite"
+
+# Configurações de Upload
+MAX_FILE_SIZE="52428800"
+UPLOAD_PATH="/opt/novusio/app/client/uploads"
+
+# Configurações de API
+API_RATE_LIMIT="100"
+API_TIMEOUT="30000"
+
+# Configurações de Notificações
+NOTIFICATIONS_ENABLED="true"
+SMTP_ENABLED="false"
+
+# Configurações de Manutenção
+MAINTENANCE_MODE="false"
+MAINTENANCE_MESSAGE="Site em manutenção. Volte em breve."
+
+# Configurações de Debug
+DEBUG="false"
+VERBOSE_LOGGING="false"
+
+# Configurações de Cluster
+CLUSTER_MODE="false"
+MAX_MEMORY="1073741824"
+
+# Configurações de Timeout
+REQUEST_TIMEOUT="30000"
+CONNECTION_TIMEOUT="5000"
+
+# Configurações de Compressão
+COMPRESSION_ENABLED="true"
+COMPRESSION_LEVEL="6"
+
+# Configurações de Headers de Segurança
+SECURITY_HEADERS="true"
+XSS_PROTECTION="true"
+CSRF_PROTECTION="true"
+
+# Configurações de CORS
+CORS_ORIGIN="$CORS_ORIGIN"
+CORS_CREDENTIALS="true"
+
+# Configurações de Sessão
+SESSION_SECRET=""
+SESSION_MAX_AGE="86400000"
+
+# Configurações de JWT
+JWT_SECRET=""
+JWT_EXPIRES_IN="1h"
+
+# Configurações de Bcrypt
+BCRYPT_ROUNDS="12"
+
+# Configurações de Rate Limiting
+RATE_LIMIT_WINDOW_MS="900000"
+RATE_LIMIT_MAX_REQUESTS="100"
+RATE_LIMIT_API="100"
+RATE_LIMIT_LOGIN="5"
+RATE_LIMIT_ADMIN="20"
+
+# Configurações de Health Check
+HEALTH_CHECK_ENABLED="true"
+METRICS_ENABLED="true"
+
+# Configurações de Backup Automático
+AUTO_BACKUP_ENABLED="true"
+AUTO_BACKUP_TIME="02:00"
+AUTO_BACKUP_RETENTION="7"
+
+# Configurações de Notificações por Email
+NOTIFICATION_EMAIL="$EMAIL"
+EOF
+    
+    # Definir permissões
+    chmod 600 "$config_file"
+    chown root:root "$config_file"
+    
+    print_success "Configuração salva em $config_file"
+}
+
 print_status "🚀 Iniciando instalação do Site Novusio..."
 
 # Atualizar sistema
 print_status "📦 Atualizando sistema..."
+wait_for_apt
 apt update && apt upgrade -y
 
 # Instalar dependências básicas
@@ -214,6 +412,7 @@ apt install -y curl wget git unzip software-properties-common apt-transport-http
 
 # Instalar Node.js 18
 print_status "📦 Instalando Node.js 18..."
+wait_for_apt
 curl -fsSL https://deb.nodesource.com/setup_18.x | bash -
 apt install -y nodejs
 
@@ -221,20 +420,29 @@ apt install -y nodejs
 NODE_VERSION=$(node --version)
 print_success "Node.js instalado: $NODE_VERSION"
 
+# Verificar se npm está disponível
+if ! command -v npm &> /dev/null; then
+    print_error "npm não encontrado. Tentando instalar..."
+    apt install -y npm
+fi
+
 # Instalar PM2 globalmente
 print_status "⚡ Instalando PM2..."
 npm install -g pm2
 
 # Instalar Nginx
 print_status "🌐 Instalando Nginx..."
+wait_for_apt
 apt install -y nginx
 
 # Instalar Certbot
 print_status "🔒 Instalando Certbot..."
+wait_for_apt
 apt install -y certbot python3-certbot-nginx
 
 # Instalar Fail2ban
 print_status "🛡️ Instalando Fail2ban..."
+wait_for_apt
 apt install -y fail2ban
 
 # Instalar UFW Firewall

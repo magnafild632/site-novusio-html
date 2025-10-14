@@ -64,12 +64,40 @@ systemctl stop novusio || true
 print_status "📥 Atualizando código..."
 cd "$APP_DIR/app"
 
+# Carregar configuração
+if [[ -f "/opt/novusio/config.conf" ]]; then
+    source "/opt/novusio/config.conf"
+    print_success "Configuração carregada"
+else
+    print_warning "Arquivo de configuração não encontrado"
+fi
+
 # Se for um repositório Git, fazer pull
 if [[ -d ".git" ]]; then
     print_status "🔄 Atualizando via Git..."
-    git fetch origin
-    git reset --hard origin/main
-    git clean -fd
+    
+    # Verificar se há configuração Git
+    if [[ -n "$GIT_REPOSITORY" ]]; then
+        print_status "Usando repositório configurado: $GIT_REPOSITORY"
+        
+        # Configurar Git se necessário
+        if [[ -n "$GIT_USERNAME" && -n "$GIT_TOKEN" ]]; then
+            git config credential.helper store
+            echo "https://$GIT_USERNAME:$GIT_TOKEN@github.com" > ~/.git-credentials
+        fi
+        
+        # Atualizar repositório
+        git fetch origin
+        git reset --hard origin/${GIT_BRANCH:-main}
+        git clean -fd
+        
+        print_success "Código atualizado via Git"
+    else
+        print_warning "Repositório Git configurado, mas sem URL. Usando configuração local."
+        git fetch origin
+        git reset --hard origin/main
+        git clean -fd
+    fi
 else
     print_warning "⚠️ Não é um repositório Git. Atualize o código manualmente."
 fi
