@@ -820,6 +820,16 @@ build_application() {
     fi
     
     log "✓ Build concluído com sucesso"
+
+    # Garantir diretório de uploads e copiar arquivos do repositório (sem sobrescrever existentes)
+    log "📁 Verificando diretório de uploads..."
+    mkdir -p "$PROJECT_DIR/uploads"
+    mkdir -p "/home/$USERNAME/uploads" 
+    if [[ -d "$PROJECT_DIR/uploads" ]]; then
+        log "⬆️  Sincronizando uploads do repositório para /home/$USERNAME/uploads..."
+        rsync -a --ignore-existing "$PROJECT_DIR/uploads/" "/home/$USERNAME/uploads/" || true
+        chown -R $USERNAME:$USERNAME "/home/$USERNAME/uploads"
+    fi
 }
 
 # Configurar variáveis de ambiente

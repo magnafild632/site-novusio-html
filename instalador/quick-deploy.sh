@@ -62,6 +62,14 @@ if [[ -d "client" ]]; then
     cd client && npm ci && npm run build && cd ..
 fi
 
+echo -e "${YELLOW}📁 Preparando uploads...${NC}"
+mkdir -p "$PROJECT_DIR/uploads"
+mkdir -p "/home/$USERNAME/uploads"
+if [[ -d "$PROJECT_DIR/uploads" ]]; then
+    rsync -a --ignore-existing "$PROJECT_DIR/uploads/" "/home/$USERNAME/uploads/" || true
+    chown -R $USERNAME:$USERNAME "/home/$USERNAME/uploads"
+fi
+
 echo -e "${YELLOW}⚙️ Configurando PM2...${NC}"
 cp instalador/ecosystem.config.js .
 sudo -u $USERNAME pm2 start ecosystem.config.js
