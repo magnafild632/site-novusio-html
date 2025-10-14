@@ -1,0 +1,46 @@
+# 🔄 Serviço systemd - Site Novusio
+# Inicialização automática e gerenciamento via systemctl
+
+[Unit]
+Description=Site Novusio - React + Node.js Application
+Documentation=https://github.com/novusio/site-novusio-html
+After=network.target nginx.service
+Wants=network.target
+Requires=network.target
+
+[Service]
+Type=simple
+User=novusio
+Group=novusio
+WorkingDirectory=/opt/novusio/app
+Environment=NODE_ENV=production
+Environment=PORT=3000
+ExecStart=/usr/bin/node server/server.js
+ExecReload=/bin/kill -HUP $MAINPID
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=novusio
+
+# Configurações de segurança
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/novusio /var/log/novusio
+CapabilityBoundingSet=CAP_NET_BIND_SERVICE
+AmbientCapabilities=CAP_NET_BIND_SERVICE
+
+# Configurações de recursos
+LimitNOFILE=65536
+LimitNPROC=4096
+MemoryMax=1G
+CPUQuota=200%
+
+# Configurações de timeout
+TimeoutStartSec=60
+TimeoutStopSec=30
+
+[Install]
+WantedBy=multi-user.target

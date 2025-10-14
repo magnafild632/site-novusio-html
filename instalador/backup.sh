@@ -1,239 +1,222 @@
 #!/bin/bash
 
-# =============================================================================
-# SCRIPT DE BACKUP AUTOMÁTICO - NOVUSIO
-# =============================================================================
-# Este script faz backup completo da aplicação incluindo:
-# - Banco de dados SQLite
-# - Arquivos de upload
-# - Configurações
-# - Logs importantes
-# =============================================================================
+# 💾 Script de Backup - Site Novusio
+# Backup automático da aplicação e dados
 
 set -e
-
-# Configurações
-BACKUP_DIR="/opt/backups/novusio"
-DATE=$(date +%Y%m%d_%H%M%S)
-PROJECT_DIR="/home/novusio"
-RETENTION_DAYS=30
-LOG_FILE="/var/log/novusio-backup.log"
 
 # Cores para output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
 NC='\033[0m'
 
-# Função de log
-log() {
-    echo -e "${GREEN}[$(date +'%Y-%m-%d %H:%M:%S')]${NC} $1" | tee -a "$LOG_FILE"
+print_status() {
+    echo -e "${BLUE}[INFO]${NC} $1"
 }
 
-error() {
-    echo -e "${RED}[ERROR]${NC} $1" | tee -a "$LOG_FILE"
+print_success() {
+    echo -e "${GREEN}[SUCCESS]${NC} $1"
+}
+
+print_warning() {
+    echo -e "${YELLOW}[WARNING]${NC} $1"
+}
+
+print_error() {
+    echo -e "${RED}[ERROR]${NC} $1"
+}
+
+# Configurações
+APP_DIR="/opt/novusio"
+BACKUP_DIR="/opt/novusio/backups"
+LOG_DIR="/var/log/novusio"
+BACKUP_USER="novusio"
+TIMESTAMP=$(date +%Y%m%d-%H%M%S)
+BACKUP_NAME="novusio-backup-$TIMESTAMP"
+BACKUP_FILE="$BACKUP_DIR/$BACKUP_NAME.tar.gz"
+
+# Verificar se está rodando como usuário correto
+if [[ "$(whoami)" != "$BACKUP_USER" ]]; then
+    print_error "Este script deve ser executado como usuário '$BACKUP_USER'"
     exit 1
-}
-
-warning() {
-    echo -e "${YELLOW}[WARNING]${NC} $1" | tee -a "$LOG_FILE"
-}
-
-# Criar diretório de backup se não existir
-create_backup_dir() {
-    if [[ ! -d "$BACKUP_DIR" ]]; then
-        mkdir -p "$BACKUP_DIR"
-        log "Diretório de backup criado: $BACKUP_DIR"
-    fi
-}
-
-# Backup do banco de dados
-backup_database() {
-    log "Iniciando backup do banco de dados..."
-    
-    DB_FILE="$PROJECT_DIR/database.sqlite"
-    if [[ -f "$DB_FILE" ]]; then
-        # Fazer dump do SQLite
-        sqlite3 "$DB_FILE" ".dump" > "$BACKUP_DIR/database_$DATE.sql"
-        
-        # Copiar arquivo original também
-        cp "$DB_FILE" "$BACKUP_DIR/database_$DATE.sqlite"
-        
-        # Comprimir
-        gzip "$BACKUP_DIR/database_$DATE.sql"
-        
-        log "✓ Backup do banco de dados concluído"
-    else
-        warning "Arquivo de banco de dados não encontrado: $DB_FILE"
-    fi
-}
-
-# Backup dos uploads
-backup_uploads() {
-    log "Iniciando backup dos arquivos de upload..."
-    
-    UPLOADS_DIR="$PROJECT_DIR/uploads"
-    if [[ -d "$UPLOADS_DIR" ]]; then
-        tar -czf "$BACKUP_DIR/uploads_$DATE.tar.gz" -C "$PROJECT_DIR" uploads/
-        log "✓ Backup dos uploads concluído"
-    else
-        warning "Diretório de uploads não encontrado: $UPLOADS_DIR"
-    fi
-}
-
-# Backup das configurações
-backup_config() {
-    log "Iniciando backup das configurações..."
-    
-    CONFIG_FILES=(
-        ".env"
-        "ecosystem.config.js"
-        "package.json"
-        "package-lock.json"
-    )
-    
-    # Criar diretório temporário para configurações
-    TEMP_DIR="/tmp/novusio_config_$DATE"
-    mkdir -p "$TEMP_DIR"
-    
-    # Copiar arquivos de configuração
-    for file in "${CONFIG_FILES[@]}"; do
-        if [[ -f "$PROJECT_DIR/$file" ]]; then
-            cp "$PROJECT_DIR/$file" "$TEMP_DIR/"
-            log "✓ Copiado: $file"
-        else
-            warning "Arquivo não encontrado: $file"
-        fi
-    done
-    
-    # Copiar logs importantes (últimos 7 dias)
-    if [[ -d "/var/log/novusio" ]]; then
-        mkdir -p "$TEMP_DIR/logs"
-        find /var/log/novusio -name "*.log" -mtime -7 -exec cp {} "$TEMP_DIR/logs/" \;
-        log "✓ Logs copiados"
-    fi
-    
-    # Criar arquivo de informações do sistema
-    cat > "$TEMP_DIR/system_info.txt" << EOF
-# Informações do Sistema - $(date)
-Hostname: $(hostname)
-Uptime: $(uptime)
-Disk Usage: $(df -h /)
-Memory Usage: $(free -h)
-Node Version: $(node --version)
-NPM Version: $(npm --version)
-PM2 Status: $(pm2 list)
-EOF
-    
-    # Comprimir configurações
-    tar -czf "$BACKUP_DIR/config_$DATE.tar.gz" -C "/tmp" "novusio_config_$DATE"
-    rm -rf "$TEMP_DIR"
-    
-    log "✓ Backup das configurações concluído"
-}
-
-# Backup completo do código (opcional)
-backup_source_code() {
-    log "Iniciando backup do código fonte..."
-    
-    # Excluir node_modules e outros arquivos desnecessários
-    tar --exclude='node_modules' \
-        --exclude='client/node_modules' \
-        --exclude='uploads' \
-        --exclude='database.sqlite' \
-        --exclude='.git' \
-        --exclude='*.log' \
-        -czf "$BACKUP_DIR/source_$DATE.tar.gz" \
-        -C "$PROJECT_DIR" .
-    
-    log "✓ Backup do código fonte concluído"
-}
-
-# Verificar integridade dos backups
-verify_backups() {
-    log "Verificando integridade dos backups..."
-    
-    # Verificar arquivos comprimidos
-    for file in "$BACKUP_DIR"/*_$DATE.*; do
-        if [[ -f "$file" ]]; then
-            if [[ "$file" == *.gz ]]; then
-                if gzip -t "$file"; then
-                    log "✓ Arquivo íntegro: $(basename "$file")"
-                else
-                    error "❌ Arquivo corrompido: $(basename "$file")"
-                fi
-            fi
-        fi
-    done
-}
-
-# Limpeza de backups antigos
-cleanup_old_backups() {
-    log "Removendo backups antigos (mais de $RETENTION_DAYS dias)..."
-    
-    find "$BACKUP_DIR" -name "*.sqlite" -mtime +$RETENTION_DAYS -delete
-    find "$BACKUP_DIR" -name "*.sql.gz" -mtime +$RETENTION_DAYS -delete
-    find "$BACKUP_DIR" -name "*.tar.gz" -mtime +$RETENTION_DAYS -delete
-    
-    log "✓ Limpeza de backups antigos concluída"
-}
-
-# Estatísticas do backup
-backup_stats() {
-    log "Estatísticas do backup:"
-    
-    BACKUP_SIZE=$(du -sh "$BACKUP_DIR" | cut -f1)
-    BACKUP_COUNT=$(find "$BACKUP_DIR" -type f | wc -l)
-    
-    echo "  - Tamanho total: $BACKUP_SIZE"
-    echo "  - Número de arquivos: $BACKUP_COUNT"
-    echo "  - Retenção: $RETENTION_DAYS dias"
-    
-    # Listar arquivos do backup atual
-    echo "  - Arquivos do backup atual:"
-    for file in "$BACKUP_DIR"/*_$DATE.*; do
-        if [[ -f "$file" ]]; then
-            size=$(du -h "$file" | cut -f1)
-            echo "    * $(basename "$file") ($size)"
-        fi
-    done
-}
-
-# Enviar notificação (opcional)
-send_notification() {
-    # Aqui você pode adicionar notificações por email, Slack, etc.
-    # Exemplo básico:
-    log "Backup concluído com sucesso em $(date)"
-    
-    # Exemplo para Slack (descomente e configure):
-    # if [[ -n "$SLACK_WEBHOOK_URL" ]]; then
-    #     curl -X POST -H 'Content-type: application/json' \
-    #         --data "{\"text\":\"✅ Backup Novusio concluído com sucesso em $(date)\"}" \
-    #         "$SLACK_WEBHOOK_URL"
-    # fi
-}
-
-# Função principal
-main() {
-    log "🚀 Iniciando backup automático do Novusio"
-    
-    create_backup_dir
-    backup_database
-    backup_uploads
-    backup_config
-    backup_source_code
-    verify_backups
-    cleanup_old_backups
-    backup_stats
-    send_notification
-    
-    log "✅ Backup concluído com sucesso!"
-}
-
-# Verificar se está sendo executado como root
-if [[ $EUID -ne 0 ]]; then
-    error "Este script deve ser executado como root"
 fi
 
-# Executar função principal
-main "$@"
+print_status "💾 Iniciando backup do Site Novusio..."
+
+# Criar diretório de backup se não existir
+mkdir -p "$BACKUP_DIR"
+
+# Criar diretório temporário para backup
+TEMP_DIR="/tmp/novusio-backup-$TIMESTAMP"
+mkdir -p "$TEMP_DIR"
+
+# Parar aplicação temporariamente para backup consistente
+print_status "⏹️ Parando aplicação para backup consistente..."
+sudo systemctl stop novusio
+
+# Aguardar aplicação parar completamente
+sleep 5
+
+# Backup do banco de dados
+print_status "🗄️ Fazendo backup do banco de dados..."
+if [[ -f "$APP_DIR/app/database.sqlite" ]]; then
+    cp "$APP_DIR/app/database.sqlite" "$TEMP_DIR/"
+    print_success "Banco de dados copiado"
+else
+    print_warning "Banco de dados não encontrado"
+fi
+
+# Backup dos uploads
+print_status "📁 Fazendo backup dos uploads..."
+if [[ -d "$APP_DIR/app/client/uploads" ]]; then
+    cp -r "$APP_DIR/app/client/uploads" "$TEMP_DIR/"
+    print_success "Uploads copiados"
+else
+    print_warning "Diretório de uploads não encontrado"
+fi
+
+# Backup do arquivo .env
+print_status "⚙️ Fazendo backup da configuração..."
+if [[ -f "$APP_DIR/.env" ]]; then
+    cp "$APP_DIR/.env" "$TEMP_DIR/"
+    print_success "Configuração copiada"
+else
+    print_warning "Arquivo .env não encontrado"
+fi
+
+# Backup dos logs
+print_status "📋 Fazendo backup dos logs..."
+if [[ -d "$LOG_DIR" ]]; then
+    cp -r "$LOG_DIR" "$TEMP_DIR/logs"
+    print_success "Logs copiados"
+else
+    print_warning "Diretório de logs não encontrado"
+fi
+
+# Backup da configuração do Nginx
+print_status "🌐 Fazendo backup da configuração do Nginx..."
+if [[ -f "/etc/nginx/sites-available/novusio" ]]; then
+    sudo cp "/etc/nginx/sites-available/novusio" "$TEMP_DIR/nginx-novusio.conf"
+    print_success "Configuração do Nginx copiada"
+else
+    print_warning "Configuração do Nginx não encontrada"
+fi
+
+# Backup da configuração do SSL
+print_status "🔒 Fazendo backup dos certificados SSL..."
+if [[ -d "/etc/letsencrypt" ]]; then
+    sudo cp -r "/etc/letsencrypt" "$TEMP_DIR/letsencrypt"
+    print_success "Certificados SSL copiados"
+else
+    print_warning "Certificados SSL não encontrados"
+fi
+
+# Backup da configuração do Fail2ban
+print_status "🛡️ Fazendo backup da configuração do Fail2ban..."
+if [[ -f "/etc/fail2ban/jail.local" ]]; then
+    sudo cp "/etc/fail2ban/jail.local" "$TEMP_DIR/fail2ban-jail.conf"
+    print_success "Configuração do Fail2ban copiada"
+else
+    print_warning "Configuração do Fail2ban não encontrada"
+fi
+
+# Criar arquivo de informações do backup
+print_status "📝 Criando arquivo de informações..."
+cat > "$TEMP_DIR/backup-info.txt" << EOF
+Backup do Site Novusio
+=====================
+Data/Hora: $(date)
+Versão: $(cd "$APP_DIR/app" && git rev-parse HEAD 2>/dev/null || echo "N/A")
+Sistema: $(uname -a)
+Usuário: $(whoami)
+Diretório: $APP_DIR
+Tamanho estimado: $(du -sh "$TEMP_DIR" 2>/dev/null | cut -f1 || echo "N/A")
+
+Arquivos incluídos:
+- database.sqlite (banco de dados)
+- uploads/ (arquivos enviados)
+- .env (configuração)
+- logs/ (logs da aplicação)
+- nginx-novusio.conf (configuração Nginx)
+- letsencrypt/ (certificados SSL)
+- fail2ban-jail.conf (configuração Fail2ban)
+
+Para restaurar:
+1. Extrair: tar -xzf $BACKUP_NAME.tar.gz
+2. Parar aplicação: sudo systemctl stop novusio
+3. Restaurar arquivos
+4. Reiniciar aplicação: sudo systemctl start novusio
+EOF
+
+# Criar arquivo de hash para verificação
+print_status "🔐 Calculando hash do backup..."
+find "$TEMP_DIR" -type f -exec md5sum {} \; > "$TEMP_DIR/backup-checksums.md5"
+
+# Criar arquivo compactado
+print_status "📦 Compactando backup..."
+cd "$TEMP_DIR"
+tar -czf "$BACKUP_FILE" . 2>/dev/null
+
+# Verificar integridade do backup
+print_status "🔍 Verificando integridade do backup..."
+if [[ -f "$BACKUP_FILE" ]]; then
+    BACKUP_SIZE=$(du -h "$BACKUP_FILE" | cut -f1)
+    print_success "Backup criado com sucesso: $BACKUP_FILE ($BACKUP_SIZE)"
+else
+    print_error "Falha ao criar backup"
+    exit 1
+fi
+
+# Limpar diretório temporário
+rm -rf "$TEMP_DIR"
+
+# Reiniciar aplicação
+print_status "🚀 Reiniciando aplicação..."
+sudo systemctl start novusio
+
+# Aguardar aplicação inicializar
+sleep 10
+
+# Verificar se aplicação está rodando
+if sudo systemctl is-active --quiet novusio; then
+    print_success "✅ Aplicação reiniciada com sucesso"
+else
+    print_error "❌ Falha ao reiniciar aplicação"
+    print_error "Verifique os logs: sudo journalctl -u novusio -f"
+fi
+
+# Limpeza de backups antigos
+print_status "🧹 Limpando backups antigos..."
+# Manter apenas os últimos 30 backups
+find "$BACKUP_DIR" -name "novusio-backup-*.tar.gz" -type f -printf '%T@ %p\n' | \
+sort -rn | tail -n +31 | cut -d' ' -f2- | xargs rm -f 2>/dev/null || true
+
+# Estatísticas do backup
+print_status "📊 Estatísticas do backup..."
+BACKUP_COUNT=$(find "$BACKUP_DIR" -name "novusio-backup-*.tar.gz" | wc -l)
+TOTAL_SIZE=$(du -sh "$BACKUP_DIR" 2>/dev/null | cut -f1)
+
+echo ""
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo ""
+print_success "🎉 Backup concluído com sucesso!"
+echo ""
+print_status "📋 Informações do backup:"
+echo "• Arquivo: $BACKUP_FILE"
+echo "• Tamanho: $BACKUP_SIZE"
+echo "• Data/Hora: $(date)"
+echo "• Total de backups: $BACKUP_COUNT"
+echo "• Espaço total usado: $TOTAL_SIZE"
+echo ""
+print_status "🔧 Comandos úteis:"
+echo "• Listar backups: ls -lh $BACKUP_DIR/"
+echo "• Verificar integridade: tar -tzf $BACKUP_FILE"
+echo "• Restaurar backup: ./restore.sh $BACKUP_FILE"
+echo ""
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo ""
+
+# Notificar sucesso
+print_success "✅ Backup finalizado! Arquivo salvo em: $BACKUP_FILE"

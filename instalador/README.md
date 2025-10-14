@@ -1,230 +1,287 @@
-# 📁 Pasta Instalador - Novusio
+# 🚀 Instalador Automático - Site Novusio
 
-Esta pasta contém todos os arquivos essenciais para instalação, configuração e manutenção do Novusio.
+Sistema completo de instalação e deploy para VPS com todas as configurações necessárias para produção.
 
-## 🚀 Arquivos Principais
+## 📋 Pré-requisitos
 
-### 📋 Scripts de Gerenciamento
+- Ubuntu 20.04+ ou Debian 11+
+- Usuário com sudo
+- Domínio configurado apontando para o servidor
+- Acesso SSH ao servidor
 
-#### `novusio-manager.sh` - **GERENCIADOR PRINCIPAL**
-Script unificado para todas as operações de gerenciamento:
+## 🎯 O que será instalado
+
+- ✅ **Node.js 18+** - Runtime JavaScript
+- ✅ **PM2** - Gerenciador de processos
+- ✅ **Nginx** - Servidor web e proxy reverso
+- ✅ **Certbot** - Certificados SSL automáticos
+- ✅ **Fail2ban** - Proteção contra ataques
+- ✅ **UFW Firewall** - Firewall básico
+- ✅ **Systemd** - Inicialização automática
+- ✅ **Backup automático** - Backup diário do banco
+
+## 🚀 Instalação Rápida
+
+### 1. Preparar o servidor
+
 ```bash
-# Comandos básicos
-sudo ./novusio-manager.sh start      # Iniciar aplicação
-sudo ./novusio-manager.sh stop       # Parar aplicação
-sudo ./novusio-manager.sh restart    # Reiniciar aplicação
-sudo ./novusio-manager.sh status     # Status da aplicação
+# Conectar via SSH
+ssh usuario@seu-servidor.com
 
-# Comandos de manutenção
-sudo ./novusio-manager.sh monitor    # Monitoramento completo
-sudo ./novusio-manager.sh backup     # Backup manual
-sudo ./novusio-manager.sh maintenance # Manutenção rápida
-sudo ./novusio-manager.sh cleanup    # Limpeza do sistema
-
-# Comandos de serviços
-sudo ./novusio-manager.sh ssl        # Renovar SSL
-sudo ./novusio-manager.sh nginx      # Recarregar Nginx
-sudo ./novusio-manager.sh services   # Status dos serviços
-
-# Comandos de monitoramento
-sudo ./novusio-manager.sh health     # Verificação rápida
-sudo ./novusio-manager.sh resources  # Recursos do sistema
-sudo ./novusio-manager.sh security   # Verificação de segurança
-sudo ./novusio-manager.sh report     # Relatório completo
-
-# Comandos de configuração
-sudo ./novusio-manager.sh deploy     # Deploy completo
-sudo ./novusio-manager.sh config     # Ver configurações
-sudo ./novusio-manager.sh info       # Informações do sistema
-```
-
-#### `deploy.sh` - **DEPLOY COMPLETO**
-Script principal para instalação e deploy completo:
-```bash
-sudo ./deploy.sh
-```
-
-#### `backup.sh` - **BACKUP AUTOMÁTICO**
-Script para backup completo do sistema:
-```bash
-sudo ./backup.sh
-```
-
-### ⚙️ Arquivos de Configuração
-
-#### `nginx.conf` - **REMOVIDO**
-Configuração agora integrada no `deploy.sh` com:
-- SSL/HTTPS
-- Proxy reverso
-- Rate limiting
-- Compressão
-- Cache
-- Segurança
-
-#### `ecosystem.config.js` - **CONFIGURAÇÃO DO PM2**
-Configuração do PM2 para gerenciamento de processos:
-- Cluster mode
-- Auto-restart
-- Logs
-- Monitoramento
-
-#### `systemd.service` - **SERVIÇO SYSTEMD**
-Configuração do systemd para inicialização automática:
-- Auto-start
-- Dependências
-- Permissões
-- Logs
-
-#### `env.production.template` - **VARIÁVEIS DE AMBIENTE**
-Template com todas as variáveis de ambiente necessárias:
-- Banco de dados
-- Autenticação
-- Uploads
-- SSL
-- Monitoramento
-
-### 🔒 Arquivos de Segurança
-
-#### `fail2ban.conf` - **CONFIGURAÇÃO DO FAIL2BAN**
-Configuração do Fail2ban para proteção contra ataques:
-- SSH
-- HTTP
-- Nginx
-
-#### `fail2ban-filters.conf` - **FILTROS DO FAIL2BAN**
-Filtros personalizados para detecção de ataques.
-
-#### `regenerate-secrets.sh` - **GERADOR DE SECRETS**
-Script para regenerar chaves secretas:
-```bash
-sudo ./regenerate-secrets.sh
-```
-
-## 📖 Como Usar
-
-### 🚀 Instalação Inicial
-```bash
-# 1. Clone o repositório
-git clone <repo-url>
+# Clonar o repositório (ou fazer upload dos arquivos)
+git clone https://github.com/seu-usuario/site-novusio-html.git
 cd site-novusio-html
-
-# 2. Execute o deploy completo
-sudo ./instalador/deploy.sh
-
-# 3. Configure as variáveis de ambiente
-sudo cp ./instalador/env.production.template .env
-sudo nano .env
-
-# 4. Inicie o serviço
-sudo ./instalador/novusio-manager.sh start
 ```
 
-### 🔄 Atualizações
+### 2. Usar o Menu Interativo (Recomendado)
+
 ```bash
-# Atualização rápida (inclui correção automática de permissões do Git)
-sudo ./instalador/novusio-manager.sh update
+# Tornar scripts executáveis
+chmod +x instalador/*.sh
 
-# Deploy completo
-sudo ./instalador/deploy.sh
+# Executar menu principal
+./instalador/menu-principal.sh
 ```
 
-### 📊 Monitoramento
+### 3. Ou executar instalação direta
+
 ```bash
-# Verificação rápida
-sudo ./instalador/novusio-manager.sh health
+# Tornar o script executável
+chmod +x instalador/install.sh
 
-# Monitoramento completo
-sudo ./instalador/novusio-manager.sh monitor
-
-# Relatório detalhado
-sudo ./instalador/novusio-manager.sh report
+# Executar instalação
+sudo ./instalador/install.sh
 ```
 
-### 🔧 Manutenção
+### 4. Configurar SSL
+
 ```bash
-# Manutenção rápida
-sudo ./instalador/novusio-manager.sh maintenance
-
-# Backup manual
-sudo ./instalador/novusio-manager.sh backup
-
-# Limpeza do sistema
-sudo ./instalador/novusio-manager.sh cleanup
+# Executar configuração SSL
+sudo ./instalador/setup-ssl.sh
 ```
 
-## 🎯 Estrutura de Arquivos
+### 5. Verificar sistema
+
+```bash
+# Verificar se tudo está funcionando
+./instalador/verificar-sistema.sh
+```
+
+### 6. Verificar aplicação
+
+```bash
+# A aplicação já foi iniciada automaticamente
+# Verificar status
+sudo systemctl status novusio
+
+# Se necessário, reiniciar
+sudo systemctl restart novusio
+```
+
+## 📁 Estrutura dos Arquivos
 
 ```
 instalador/
-├── 📋 SCRIPTS PRINCIPAIS
-│   ├── novusio-manager.sh    # Gerenciador unificado
-│   ├── deploy.sh             # Deploy completo
-│   └── backup.sh             # Backup automático
-│
-├── ⚙️ CONFIGURAÇÕES
-│   ├── nginx.conf            # Removido (integrado no deploy.sh)
-│   ├── ecosystem.config.js   # PM2
-│   ├── systemd.service       # Systemd
-│   └── env.production.template # Variáveis de ambiente
-│
-├── 🔒 SEGURANÇA
-│   ├── fail2ban.conf         # Fail2ban
-│   ├── fail2ban-filters.conf # Filtros
-│   └── regenerate-secrets.sh # Gerador de secrets
-│
-└── 📖 DOCUMENTAÇÃO
-    └── README.md             # Este arquivo
+├── README.md                 # Este arquivo
+├── menu-principal.sh         # Menu interativo principal
+├── install.sh               # Instalação automática completa
+├── configurar-env.sh        # Configurador de .env
+├── setup-ssl.sh             # Configuração SSL com Certbot
+├── deploy.sh                # Script de deploy
+├── backup.sh                # Script de backup
+├── verificar-sistema.sh     # Verificador de sistema
+├── verificar-antes-commit.sh # Verificador pré-deploy
+├── regenerate-secrets.sh    # Gerador de secrets
+├── novusio-manager.sh       # Gerenciador da aplicação
+├── ecosystem.config.js      # Configuração PM2
+├── nginx.conf               # Configuração Nginx
+├── novusio.service          # Serviço systemd
+├── fail2ban.conf            # Configuração Fail2ban
+├── fail2ban-filters.conf    # Filtros Fail2ban
+├── env.production.template  # Template .env para produção
+└── INSTRUCOES-DEPLOY.md     # Instruções detalhadas
 ```
 
-## 🚨 Comandos de Emergência
+## 🎛️ Menu Interativo
 
-### 🔥 Problemas Críticos
+O menu principal oferece uma interface amigável para todas as operações:
+
 ```bash
-# Aplicação não inicia
-sudo ./novusio-manager.sh restart
-sudo ./novusio-manager.sh logs
-
-# Site fora do ar
-sudo ./novusio-manager.sh health
-sudo ./novusio-manager.sh nginx
-
-# SSL expirado
-sudo ./novusio-manager.sh ssl
-
-# Sistema com problemas
-sudo ./novusio-manager.sh maintenance
-sudo ./novusio-manager.sh cleanup
+# Executar menu interativo
+./instalador/menu-principal.sh
 ```
 
-### 📞 Logs e Debug
+**Opções disponíveis:**
+- 🆕 **Instalação Completa** - Instalar tudo do zero (inclui .env automático)
+- 🔄 **Atualizar Aplicação** - Deploy de atualizações
+- ⚙️ **Configurar .env** - Reconfigurar variáveis de ambiente
+- 🔒 **Configurar SSL** - Instalar certificados SSL
+- 💾 **Backup/Restore** - Gerenciar backups
+- 🛠️ **Gerenciar Serviços** - Controlar aplicação
+- 🔍 **Verificar Sistema** - Diagnóstico completo
+- 🆘 **Suporte e Logs** - Ajuda e troubleshooting
+
+## 🔧 Comandos Úteis
+
+### Gerenciar aplicação
+
 ```bash
-# Logs da aplicação
-sudo ./novusio-manager.sh logs
+# Status da aplicação
+sudo systemctl status novusio
 
-# Status detalhado
-sudo ./novusio-manager.sh status
+# Parar aplicação
+sudo systemctl stop novusio
 
-# Recursos do sistema
-sudo ./novusio-manager.sh resources
+# Iniciar aplicação
+sudo systemctl start novusio
 
-# Relatório completo
-sudo ./novusio-manager.sh report
+# Reiniciar aplicação
+sudo systemctl restart novusio
+
+# Ver logs
+sudo journalctl -u novusio -f
 ```
 
-## ⚠️ Importante
+### PM2 (alternativo)
 
-- **Sempre execute como root**: `sudo ./script.sh`
-- **Faça backup antes de mudanças**: `sudo ./novusio-manager.sh backup`
-- **Monitore regularmente**: `sudo ./novusio-manager.sh monitor`
-- **Mantenha atualizado**: `sudo ./novusio-manager.sh update`
+```bash
+# Status
+pm2 status
 
-## 🔗 Links Úteis
+# Parar
+pm2 stop novusio
 
-- **Logs**: `/var/log/novusio/`
-- **Configurações**: `/home/novusio/`
-- **Backups**: `/opt/backups/novusio/`
-- **SSL**: `/etc/letsencrypt/live/`
+# Iniciar
+pm2 start novusio
+
+# Reiniciar
+pm2 restart novusio
+
+# Logs
+pm2 logs novusio
+```
+
+### Nginx
+
+```bash
+# Testar configuração
+sudo nginx -t
+
+# Recarregar configuração
+sudo systemctl reload nginx
+
+# Status
+sudo systemctl status nginx
+```
+
+### SSL
+
+```bash
+# Renovar certificados
+sudo certbot renew
+
+# Testar renovação
+sudo certbot renew --dry-run
+```
+
+## 🔒 Segurança
+
+O instalador configura automaticamente:
+
+- **Firewall UFW** com portas 22, 80, 443
+- **Fail2ban** para proteção contra ataques
+- **Certificados SSL** automáticos
+- **Headers de segurança** no Nginx
+- **Rate limiting** para APIs
+- **Backup automático** diário
+
+## 📊 Monitoramento
+
+### Logs importantes
+
+```bash
+# Aplicação
+sudo journalctl -u novusio -f
+
+# Nginx
+sudo tail -f /var/log/nginx/access.log
+sudo tail -f /var/log/nginx/error.log
+
+# Fail2ban
+sudo tail -f /var/log/fail2ban.log
+```
+
+### Status dos serviços
+
+```bash
+# Verificar todos os serviços
+sudo systemctl status novusio nginx fail2ban ufw
+```
+
+## 🔄 Backup e Restore
+
+### Backup automático
+
+O backup é executado diariamente às 2:00 AM via cron.
+
+### Backup manual
+
+```bash
+# Executar backup manual
+sudo ./instalador/backup.sh
+```
+
+### Restore
+
+```bash
+# Restaurar backup
+sudo ./instalador/restore.sh /caminho/para/backup.tar.gz
+```
+
+## 🆘 Solução de Problemas
+
+### Aplicação não inicia
+
+```bash
+# Verificar logs
+sudo journalctl -u novusio -f
+
+# Verificar configuração
+sudo nginx -t
+
+# Verificar portas
+sudo netstat -tlnp | grep :3000
+```
+
+### SSL não funciona
+
+```bash
+# Verificar certificados
+sudo certbot certificates
+
+# Renovar certificados
+sudo certbot renew --force-renewal
+```
+
+### Nginx não carrega
+
+```bash
+# Verificar configuração
+sudo nginx -t
+
+# Verificar sintaxe
+sudo cat /etc/nginx/sites-available/novusio
+```
+
+## 📞 Suporte
+
+Para problemas técnicos:
+
+1. Verificar logs: `sudo journalctl -u novusio -f`
+2. Verificar status: `sudo systemctl status novusio nginx`
+3. Verificar SSL: `sudo certbot certificates`
+4. Contatar: suporte@novusiopy.com
 
 ---
 
-**📧 Suporte**: Para dúvidas ou problemas, consulte os logs ou execute o monitoramento completo.
+**Desenvolvido com ❤️ para Novusio Paraguay 🇵🇾**

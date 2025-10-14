@@ -1,124 +1,149 @@
 #!/bin/bash
 
-# =============================================================================
-# REGENERAR SECRETS - NOVUSIO
-# =============================================================================
-# Script para regenerar JWT_SECRET e SESSION_SECRET
-# Use este script se precisar atualizar os secrets de segurança
-# =============================================================================
+# 🔐 Gerador de Secrets - Site Novusio
+# Script para gerar chaves seguras para produção
 
 set -e
 
-# Cores
+# Cores para output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m'
 
-# Verificar se está como root
-if [[ $EUID -ne 0 ]]; then
-    echo -e "${RED}❌ Execute como root: sudo $0${NC}"
+print_status() {
+    echo -e "${BLUE}[INFO]${NC} $1"
+}
+
+print_success() {
+    echo -e "${GREEN}[SUCCESS]${NC} $1"
+}
+
+print_warning() {
+    echo -e "${YELLOW}[WARNING]${NC} $1"
+}
+
+print_error() {
+    echo -e "${RED}[ERROR]${NC} $1"
+}
+
+# Função para gerar string aleatória
+generate_random_string() {
+    local length=${1:-32}
+    openssl rand -base64 $length | tr -d "=+/" | cut -c1-$length
+}
+
+# Função para gerar UUID
+generate_uuid() {
+    python3 -c "import uuid; print(uuid.uuid4())" 2>/dev/null || \
+    cat /proc/sys/kernel/random/uuid 2>/dev/null || \
+    generate_random_string 32
+}
+
+print_status "🔐 Gerando secrets seguros para produção..."
+
+# Verificar se openssl está disponível
+if ! command -v openssl &> /dev/null; then
+    print_error "OpenSSL não está instalado. Instale com: sudo apt install openssl"
     exit 1
 fi
 
-echo -e "${BLUE}🔐 Regenerar Secrets de Segurança - Novusio${NC}"
-echo "=============================================="
 echo ""
-echo -e "${YELLOW}⚠️ ATENÇÃO: Esta ação irá gerar novos secrets!${NC}"
-echo -e "${YELLOW}   Isso fará com que todos os usuários precisem fazer login novamente.${NC}"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
-read -p "Tem certeza que deseja continuar? (y/N): " CONFIRM
+echo "🔐 SECRETS GERADOS PARA PRODUÇÃO"
+echo ""
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo ""
 
-if [[ ! "$CONFIRM" =~ ^[Yy]$ ]]; then
-    echo -e "${GREEN}✅ Operação cancelada${NC}"
-    exit 0
-fi
+# Gerar JWT Secret
+JWT_SECRET=$(generate_random_string 64)
+echo "JWT_SECRET=$JWT_SECRET"
 
-# Diretório do projeto
-PROJECT_DIR="/home/novusio"
+# Gerar Session Secret
+SESSION_SECRET=$(generate_random_string 64)
+echo "SESSION_SECRET=$SESSION_SECRET"
 
-if [[ ! -d "$PROJECT_DIR" ]]; then
-    echo -e "${RED}❌ Projeto não encontrado em $PROJECT_DIR${NC}"
-    exit 1
-fi
+# Gerar Database Secret
+DB_SECRET=$(generate_random_string 32)
+echo "DB_SECRET=$DB_SECRET"
 
-cd "$PROJECT_DIR"
+# Gerar API Key
+API_KEY=$(generate_uuid)
+echo "API_KEY=$API_KEY"
 
-if [[ ! -f ".env" ]]; then
-    echo -e "${RED}❌ Arquivo .env não encontrado${NC}"
-    exit 1
-fi
+# Gerar Admin Password (hash)
+ADMIN_PASSWORD=$(generate_random_string 16)
+echo "ADMIN_PASSWORD=$ADMIN_PASSWORD"
 
-# Fazer backup do .env atual
-BACKUP_FILE=".env.backup-$(date +%Y%m%d_%H%M%S)"
-echo -e "${BLUE}📋 Criando backup: $BACKUP_FILE${NC}"
-cp .env "$BACKUP_FILE"
+# Gerar Encryption Key
+ENCRYPTION_KEY=$(generate_random_string 32)
+echo "ENCRYPTION_KEY=$ENCRYPTION_KEY"
 
-# Gerar novos secrets
-echo -e "${BLUE}🔐 Gerando novos secrets...${NC}"
-NEW_JWT_SECRET=$(openssl rand -base64 48 | tr -d '\n')
-NEW_SESSION_SECRET=$(openssl rand -base64 32 | tr -d '\n')
+# Gerar CSRF Secret
+CSRF_SECRET=$(generate_random_string 32)
+echo "CSRF_SECRET=$CSRF_SECRET"
 
-echo -e "${GREEN}✓ Novo JWT Secret gerado: ${NEW_JWT_SECRET:0:10}... (48 bytes)${NC}"
-echo -e "${GREEN}✓ Novo Session Secret gerado: ${NEW_SESSION_SECRET:0:10}... (32 bytes)${NC}"
+# Gerar Backup Key
+BACKUP_KEY=$(generate_random_string 32)
+echo "BACKUP_KEY=$BACKUP_KEY"
 
-# Atualizar arquivo .env
-echo -e "${BLUE}📝 Atualizando arquivo .env...${NC}"
+# Gerar Monitoring Token
+MONITORING_TOKEN=$(generate_uuid)
+echo "MONITORING_TOKEN=$MONITORING_TOKEN"
 
-# Verificar se as variáveis existem
-if grep -q "^JWT_SECRET=" .env; then
-    # Atualizar JWT_SECRET existente
-    sed -i "s|^JWT_SECRET=.*|JWT_SECRET=$NEW_JWT_SECRET|" .env
-else
-    # Adicionar JWT_SECRET
-    echo "JWT_SECRET=$NEW_JWT_SECRET" >> .env
-fi
+echo ""
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo ""
 
-if grep -q "^SESSION_SECRET=" .env; then
-    # Atualizar SESSION_SECRET existente
-    sed -i "s|^SESSION_SECRET=.*|SESSION_SECRET=$NEW_SESSION_SECRET|" .env
-else
-    # Adicionar SESSION_SECRET
-    echo "SESSION_SECRET=$NEW_SESSION_SECRET" >> .env
-fi
+print_warning "⚠️ IMPORTANTE:"
+echo ""
+echo "1. Copie estes valores para seu arquivo .env"
+echo "2. NUNCA compartilhe estes secrets"
+echo "3. Mantenha-os em local seguro"
+echo "4. Faça backup dos secrets"
+echo ""
 
-# Salvar secrets em arquivo seguro
-SECRETS_FILE=".secrets-regenerated-$(date +%Y%m%d_%H%M%S).txt"
-cat > "$SECRETS_FILE" << EOF
-# SECRETS REGENERADOS - NOVUSIO
-# Gerado em: $(date)
-# IMPORTANTE: Guarde este arquivo em local seguro e delete do servidor!
+print_status "📝 Para aplicar estes secrets:"
+echo ""
+echo "1. Edite o arquivo .env:"
+echo "   sudo nano /opt/novusio/.env"
+echo ""
+echo "2. Substitua os valores pelos gerados acima"
+echo ""
+echo "3. Reinicie a aplicação:"
+echo "   sudo systemctl restart novusio"
+echo ""
 
-JWT_SECRET=$NEW_JWT_SECRET
-SESSION_SECRET=$NEW_SESSION_SECRET
+# Perguntar se quer salvar em arquivo
+read -p "Deseja salvar estes secrets em um arquivo? (y/N): " SAVE_FILE
 
-# Backup anterior salvo em: $BACKUP_FILE
+if [[ "$SAVE_FILE" == "y" || "$SAVE_FILE" == "Y" ]]; then
+    SECRETS_FILE="/opt/novusio/secrets-$(date +%Y%m%d-%H%M%S).txt"
+    
+    cat > "$SECRETS_FILE" << EOF
+# Secrets gerados em $(date)
+# NUNCA compartilhe este arquivo!
+
+JWT_SECRET=$JWT_SECRET
+SESSION_SECRET=$SESSION_SECRET
+DB_SECRET=$DB_SECRET
+API_KEY=$API_KEY
+ADMIN_PASSWORD=$ADMIN_PASSWORD
+ENCRYPTION_KEY=$ENCRYPTION_KEY
+CSRF_SECRET=$CSRF_SECRET
+BACKUP_KEY=$BACKUP_KEY
+MONITORING_TOKEN=$MONITORING_TOKEN
 EOF
-
-chmod 400 "$SECRETS_FILE"
-chown novusio:novusio "$SECRETS_FILE"
-
-echo -e "${GREEN}✓ Arquivo .env atualizado${NC}"
-echo -e "${GREEN}✓ Backup dos novos secrets: $SECRETS_FILE${NC}"
-
-# Reiniciar aplicação
-echo -e "${BLUE}🔄 Reiniciando aplicação...${NC}"
-sudo -u novusio pm2 restart novusio-server
+    
+    # Definir permissões seguras
+    chmod 600 "$SECRETS_FILE"
+    chown novusio:novusio "$SECRETS_FILE"
+    
+    print_success "Secrets salvos em: $SECRETS_FILE"
+    print_warning "⚠️ Remova este arquivo após copiar os valores!"
+fi
 
 echo ""
-echo -e "${GREEN}✅ Secrets regenerados com sucesso!${NC}"
-echo ""
-echo -e "${YELLOW}📋 INFORMAÇÕES IMPORTANTES:${NC}"
-echo "  - Backup do .env anterior: $PROJECT_DIR/$BACKUP_FILE"
-echo "  - Backup dos novos secrets: $PROJECT_DIR/$SECRETS_FILE"
-echo "  - Todos os usuários precisarão fazer login novamente"
-echo "  - Guarde o arquivo de secrets em local seguro"
-echo "  - Delete o arquivo de secrets do servidor após salvar"
-echo ""
-echo -e "${BLUE}🔧 Comandos úteis:${NC}"
-echo "  - Ver backup anterior: cat $PROJECT_DIR/$BACKUP_FILE"
-echo "  - Ver novos secrets: cat $PROJECT_DIR/$SECRETS_FILE"
-echo "  - Deletar backup: rm $PROJECT_DIR/$BACKUP_FILE"
-echo "  - Deletar secrets: rm $PROJECT_DIR/$SECRETS_FILE"
-echo ""
+print_success "✅ Secrets gerados com sucesso!"
