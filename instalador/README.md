@@ -52,8 +52,8 @@ sudo ./backup.sh
 
 ### ⚙️ Arquivos de Configuração
 
-#### `nginx.conf` - **CONFIGURAÇÃO DO NGINX**
-Configuração completa do Nginx com:
+#### `nginx.conf` - **REMOVIDO**
+Configuração agora integrada no `deploy.sh` com:
 - SSL/HTTPS
 - Proxy reverso
 - Rate limiting
@@ -162,7 +162,7 @@ instalador/
 │   └── backup.sh             # Backup automático
 │
 ├── ⚙️ CONFIGURAÇÕES
-│   ├── nginx.conf            # Nginx
+│   ├── nginx.conf            # Removido (integrado no deploy.sh)
 │   ├── ecosystem.config.js   # PM2
 │   ├── systemd.service       # Systemd
 │   └── env.production.template # Variáveis de ambiente

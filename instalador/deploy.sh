@@ -1517,98 +1517,271 @@ setup_nginx() {
     fi
     
     # Criar configuração do site com nome específico do domínio
-    # IMPORTANTE: Configuração inicial SEM SSL (será adicionado pelo Certbot)
-    log "📝 Criando configuração inicial para $DOMAIN (sem SSL)..."
+    # IMPORTANTE: Configuração completa COM SSL (certificados serão instalados pelo Certbot)
+    log "📝 Criando configuração completa para $DOMAIN (com SSL)..."
     cat > /etc/nginx/sites-available/$DOMAIN << 'NGINX_CONFIG_EOF'
-# Rate limiting
-limit_req_zone $binary_remote_addr zone=api_3000:10m rate=10r/s;
-limit_req_zone $binary_remote_addr zone=login_3000:10m rate=1r/s;
-
-# Upstream para a aplicação
-upstream novusio_backend_3000 {
-    server 127.0.0.1:3000;
-    keepalive 32;
+events {
+    worker_connections 1024;
 }
 
-# Configuração HTTP (Certbot irá adicionar HTTPS depois)
-server {
-    listen 80;
-    listen [::]:80;
-    server_name DOMAIN_PLACEHOLDER www.DOMAIN_PLACEHOLDER;
-    
-    # Root do React
-    root PROJECT_DIR_PLACEHOLDER/client/dist;
-    index index.html;
-    
-    # Gzip compression
-    gzip on;
-    gzip_vary on;
-    gzip_min_length 1024;
-    gzip_types text/plain text/css text/xml text/javascript application/javascript application/xml+rss application/json;
-    
-    # Certbot challenge
-    location /.well-known/acme-challenge/ {
-        root /var/www/html;
+http {
+    include /etc/nginx/mime.types;
+    default_type application/octet-stream;
+
+    # Configuração global de upload
+    client_max_body_size 50M;
+
+    # Rate limiting zones
+    limit_req_zone $binary_remote_addr zone=api:10m rate=10r/s;
+    limit_req_zone $binary_remote_addr zone=login:10m rate=1r/s;
+    limit_req_zone $binary_remote_addr zone=general:10m rate=30r/s;
+
+    # Upstream para a aplicação Node.js
+    upstream novusio_backend {
+        server 127.0.0.1:3000;
+        keepalive 32;
+        keepalive_requests 100;
+        keepalive_timeout 60s;
     }
-    
-    # Arquivos estáticos do React
-    location / {
-        try_files $uri $uri/ /index.html;
-    }
-    
-    # Cache de assets
-    location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$ {
-        expires 1y;
-        add_header Cache-Control "public, immutable";
-    }
-    
-    # API routes com rate limiting
-    location /api/ {
-        limit_req zone=api_3000 burst=20 nodelay;
+
+    # Redirecionamento HTTP para HTTPS
+    server {
+        listen 80;
+        listen [::]:80;
+        server_name DOMAIN_PLACEHOLDER www.DOMAIN_PLACEHOLDER;
         
-        proxy_pass http://novusio_backend_3000;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection 'upgrade';
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-        proxy_cache_bypass $http_upgrade;
-        proxy_read_timeout 86400;
-    }
-    
-    # Admin login com rate limiting rigoroso
-    location /api/auth/login {
-        limit_req zone=login_3000 burst=5 nodelay;
+        # Certbot challenge para Let's Encrypt
+        location /.well-known/acme-challenge/ {
+            root /var/www/html;
+            try_files $uri =404;
+        }
         
-        proxy_pass http://novusio_backend_3000;
-        proxy_http_version 1.1;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-    }
-    
-    # Nota: Upload files removido - imagens servidas do banco de dados via API
-        
-        # Security - bloquear scripts
-        location ~ \.(php|jsp|asp|sh|cgi)$ {
-            deny all;
+        # Redirecionar todo o resto para HTTPS
+        location / {
+            return 301 https://$server_name$request_uri;
         }
     }
-    
-    # Deny access to sensitive files
-    location ~ /\. {
-        deny all;
-        access_log off;
-        log_not_found off;
+
+    # Configuração HTTPS principal
+    server {
+        listen 443 ssl http2;
+        listen [::]:443 ssl http2;
+        server_name DOMAIN_PLACEHOLDER www.DOMAIN_PLACEHOLDER;
+        
+        # SSL Configuration
+        ssl_certificate /etc/letsencrypt/live/DOMAIN_PLACEHOLDER/fullchain.pem;
+        ssl_certificate_key /etc/letsencrypt/live/DOMAIN_PLACEHOLDER/privkey.pem;
+        
+        # SSL Security
+        ssl_protocols TLSv1.2 TLSv1.3;
+        ssl_ciphers ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-RSA-AES128-SHA256:ECDHE-RSA-AES256-SHA384:ECDHE-RSA-CHACHA20-POLY1305;
+        ssl_prefer_server_ciphers off;
+        ssl_session_cache shared:SSL:10m;
+        ssl_session_timeout 10m;
+        ssl_session_tickets off;
+        
+        # OCSP Stapling
+        ssl_stapling on;
+        ssl_stapling_verify on;
+        ssl_trusted_certificate /etc/letsencrypt/live/DOMAIN_PLACEHOLDER/chain.pem;
+        resolver 8.8.8.8 8.8.4.4 valid=300s;
+        resolver_timeout 5s;
+        
+        # Security Headers
+        add_header X-Frame-Options DENY always;
+        add_header X-Content-Type-Options nosniff always;
+        add_header X-XSS-Protection "1; mode=block" always;
+        add_header Strict-Transport-Security "max-age=31536000; includeSubDomains; preload" always;
+        add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+        add_header Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self'; frame-ancestors 'none';" always;
+        
+        # Remove server header
+        server_tokens off;
+        
+        # Gzip compression
+        gzip on;
+        gzip_vary on;
+        gzip_min_length 1024;
+        gzip_comp_level 6;
+        gzip_types text/plain text/css text/xml text/javascript application/javascript application/xml+rss application/json application/xml image/svg+xml;
+        
+        # Root directory (React build)
+        root PROJECT_DIR_PLACEHOLDER/client/dist;
+        index index.html index.htm;
+        
+        # Logs
+        access_log /var/log/nginx/novusio_access.log;
+        error_log /var/log/nginx/novusio_error.log;
+        
+        # Static files (React SPA)
+        location / {
+            try_files $uri $uri/ /index.html;
+        }
+        
+        # API routes com rate limiting
+        location /api/ {
+            limit_req zone=api burst=20 nodelay;
+            
+            # Limite de tamanho para uploads via API
+            client_max_body_size 50M;
+            client_body_timeout 300s;
+            client_header_timeout 300s;
+            
+            proxy_pass http://novusio_backend;
+            proxy_http_version 1.1;
+            proxy_set_header Upgrade $http_upgrade;
+            proxy_set_header Connection 'upgrade';
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+            proxy_cache_bypass $http_upgrade;
+            proxy_read_timeout 300s;
+            proxy_connect_timeout 60s;
+            proxy_send_timeout 300s;
+        }
+        
+        # Rotas específicas de upload com limites maiores
+        location /api/slides {
+            limit_req zone=api burst=10 nodelay;
+            
+            # Limites específicos para upload de slides
+            client_max_body_size 50M;
+            client_body_timeout 300s;
+            client_header_timeout 300s;
+            
+            proxy_pass http://novusio_backend;
+            proxy_http_version 1.1;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+            proxy_read_timeout 300s;
+            proxy_connect_timeout 60s;
+            proxy_send_timeout 300s;
+        }
+        
+        location /api/portfolio {
+            limit_req zone=api burst=10 nodelay;
+            
+            # Limites específicos para upload de portfolio
+            client_max_body_size 50M;
+            client_body_timeout 300s;
+            client_header_timeout 300s;
+            
+            proxy_pass http://novusio_backend;
+            proxy_http_version 1.1;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+            proxy_read_timeout 300s;
+            proxy_connect_timeout 60s;
+            proxy_send_timeout 300s;
+        }
+
+        # Admin login com rate limiting muito rigoroso
+        location /api/auth/login {
+            limit_req zone=login burst=5 nodelay;
+            
+            proxy_pass http://novusio_backend;
+            proxy_http_version 1.1;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+        }
+
+        # Static images (moved to client/public)
+        location ~ \.(png|jpg|jpeg|gif|svg|ico)$ {
+            root PROJECT_DIR_PLACEHOLDER/client/dist;
+            expires 1y;
+            add_header Cache-Control "public, immutable";
+            add_header Vary "Accept-Encoding";
+            try_files $uri =404;
+        }
+        
+        # Nota: Uploads agora são servidos do banco de dados via rotas da API
+        # location /uploads/ removido - imagens servidas via /api/portfolio/:id/logo e /api/slides/:id/image
+        
+        # Favicon
+        location = /favicon.ico {
+            expires 1y;
+            add_header Cache-Control "public, immutable";
+            try_files $uri =404;
+        }
+        
+        # Robots.txt
+        location = /robots.txt {
+            expires 1d;
+            add_header Cache-Control "public";
+            try_files $uri =404;
+        }
+        
+        # Sitemap
+        location = /sitemap.xml {
+            expires 1d;
+            add_header Cache-Control "public";
+            try_files $uri =404;
+        }
+        
+        # Health check endpoint
+        location /health {
+            access_log off;
+            return 200 "healthy\n";
+            add_header Content-Type text/plain;
+        }
+        
+        # Deny access to sensitive files
+        location ~ /\. {
+            deny all;
+            access_log off;
+            log_not_found off;
+        }
+        
+        location ~ \.(env|config|sql|log|bak|backup|old|tmp)$ {
+            deny all;
+            access_log off;
+            log_not_found off;
+        }
+        
+        # Deny access to node_modules and other sensitive directories
+        location ~ ^/(node_modules|\.git|\.svn|\.hg|\.bzr)/ {
+            deny all;
+            access_log off;
+            log_not_found off;
+        }
+        
+        # Block common attack patterns
+        location ~* \.(htaccess|htpasswd|ini|log|sh|sql|conf)$ {
+            deny all;
+            access_log off;
+            log_not_found off;
+        }
+        
+        # Block user agents maliciosos
+        if ($http_user_agent ~* (libwww-perl|wget|python|nikto|curl|scan|java|winhttp|clshttp|loader)) {
+            return 403;
+        }
+        
+        # Block referer spam
+        if ($http_referer ~* (babes|forsale|girl|jewelry|love|nudit|organic|poker|porn|sex|teen)) {
+            return 403;
+        }
     }
-    
-    location ~ \.(env|config|sql|log)$ {
-        deny all;
-        access_log off;
-        log_not_found off;
+
+    # Configuração adicional para www redirect
+    server {
+        listen 443 ssl http2;
+        listen [::]:443 ssl http2;
+        server_name www.DOMAIN_PLACEHOLDER;
+        
+        ssl_certificate /etc/letsencrypt/live/DOMAIN_PLACEHOLDER/fullchain.pem;
+        ssl_certificate_key /etc/letsencrypt/live/DOMAIN_PLACEHOLDER/privkey.pem;
+        
+        location / {
+            return 301 https://DOMAIN_PLACEHOLDER$request_uri;
+        }
     }
 }
 NGINX_CONFIG_EOF
