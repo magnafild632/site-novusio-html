@@ -17,7 +17,7 @@ const Navbar = () => {
       <div className="nav-container">
         <div className="nav-brand">
           <div className="logo">
-            <img src="/uploads/logo.svg" alt="Logo" className="logo-img" />
+            <img src="/logo.svg" alt="Logo" className="logo-img" />
           </div>
           <span className="company-name">NOVUSIO</span>
         </div>
