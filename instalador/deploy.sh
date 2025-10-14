@@ -215,7 +215,8 @@ update_application() {
     
     # Atualizar código
     log "📥 Atualizando código do repositório..."
-    git pull origin main
+    sudo -u novusio git config --global --add safe.directory /home/novusio || true
+    sudo -u novusio git pull origin main || sudo -u novusio git pull origin master
     
     # Instalar dependências
     log "📦 Instalando dependências..."
@@ -550,13 +551,11 @@ collect_info() {
     
     # Informações do sistema
     read -p "🌐 Domínio (ex: novusio.com): " DOMAIN
-    read -p "📧 Email para SSL (Let's Encrypt) [suporte@novusiopy.com]: " EMAIL
-    EMAIL=${EMAIL:-suporte@novusiopy.com}
+    # Fixos conforme solicitado
+    EMAIL="suporte@novusiopy.com"
+    APP_PORT=3000
+    PROJECT_DIR="/home/novusio"
     read -p "👤 Usuário do sistema (ex: novusio): " USERNAME
-    read -p "🔧 Porta da aplicação [3000]: " APP_PORT
-    APP_PORT=${APP_PORT:-3000}
-    read -p "📁 Diretório do projeto [/home/novusio]: " PROJECT_DIR
-    PROJECT_DIR=${PROJECT_DIR:-/home/novusio}
     read -p "🔗 Repositório Git: " GIT_REPO
     
     # Validações básicas

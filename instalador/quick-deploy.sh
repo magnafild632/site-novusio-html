@@ -26,8 +26,6 @@ fi
 
 # Coletar informações básicas
 read -p "🌐 Domínio: " DOMAIN
-read -p "📧 Email para SSL [suporte@novusiopy.com]: " EMAIL
-EMAIL=${EMAIL:-suporte@novusiopy.com}
 read -p "🔗 Repositório Git: " GIT_REPO
 
 # Configurações padrão
@@ -78,7 +76,7 @@ rm -f /etc/nginx/sites-enabled/default
 
 echo -e "${YELLOW}🔒 Configurando SSL...${NC}"
 systemctl reload nginx
-certbot --nginx -d $DOMAIN -d www.$DOMAIN --non-interactive --agree-tos --email $EMAIL --redirect
+certbot --nginx -d $DOMAIN -d www.$DOMAIN --non-interactive --agree-tos --email suporte@novusiopy.com --redirect
 
 echo -e "${YELLOW}🔥 Configurando firewall...${NC}"
 ufw allow ssh
