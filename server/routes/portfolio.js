@@ -74,27 +74,32 @@ router.post('/', authMiddleware, upload.single('logo'), (req, res) => {
     });
   }
 
-  const logo_url = req.file ? `/uploads/${req.file.filename}` : '';
-
-  if (!logo_url && !req.body.logo_url) {
+  if (!req.file && !req.body.logo_url) {
     return res.status(400).json({
       success: false,
       message: 'Logo é obrigatória',
     });
   }
 
-  const finalLogoUrl = logo_url || req.body.logo_url;
+  // Se tem arquivo, salvar no banco; senão, usar URL externa
+  const logo_url = req.body.logo_url || null;
+  const logo_data = req.file ? req.file.buffer : null;
+  const logo_mimetype = req.file ? req.file.mimetype : null;
+  const logo_filename = req.file ? req.file.originalname : null;
 
   const query = `
-    INSERT INTO portfolio_clients (name, logo_url, order_position, active)
-    VALUES (?, ?, ?, ?)
+    INSERT INTO portfolio_clients (name, logo_url, logo_data, logo_mimetype, logo_filename, order_position, active)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
   `;
 
   db.run(
     query,
     [
       name,
-      finalLogoUrl,
+      logo_url,
+      logo_data,
+      logo_mimetype,
+      logo_filename,
       order_position || 0,
       active !== undefined ? active : 1,
     ],
@@ -112,7 +117,7 @@ router.post('/', authMiddleware, upload.single('logo'), (req, res) => {
         data: {
           id: this.lastID,
           name,
-          logo_url: finalLogoUrl,
+          logo_url: logo_url || `/api/portfolio/${this.lastID}/logo`,
           order_position: order_position || 0,
           active: active !== undefined ? active : 1,
         },
@@ -124,9 +129,6 @@ router.post('/', authMiddleware, upload.single('logo'), (req, res) => {
 // Atualizar cliente (protegido)
 router.put('/:id', authMiddleware, upload.single('logo'), (req, res) => {
   const { name, order_position, active } = req.body;
-  const logo_url = req.file
-    ? `/uploads/${req.file.filename}`
-    : req.body.logo_url;
 
   db.get(
     'SELECT * FROM portfolio_clients WHERE id = ?',
@@ -139,9 +141,15 @@ router.put('/:id', authMiddleware, upload.single('logo'), (req, res) => {
         });
       }
 
+      // Preparar dados para atualização
+      const logo_url = req.body.logo_url || client.logo_url;
+      const logo_data = req.file ? req.file.buffer : client.logo_data;
+      const logo_mimetype = req.file ? req.file.mimetype : client.logo_mimetype;
+      const logo_filename = req.file ? req.file.originalname : client.logo_filename;
+
       const query = `
       UPDATE portfolio_clients 
-      SET name = ?, logo_url = ?, order_position = ?, active = ?
+      SET name = ?, logo_url = ?, logo_data = ?, logo_mimetype = ?, logo_filename = ?, order_position = ?, active = ?
       WHERE id = ?
     `;
 
@@ -149,7 +157,10 @@ router.put('/:id', authMiddleware, upload.single('logo'), (req, res) => {
         query,
         [
           name || client.name,
-          logo_url || client.logo_url,
+          logo_url,
+          logo_data,
+          logo_mimetype,
+          logo_filename,
           order_position !== undefined ? order_position : client.order_position,
           active !== undefined ? active : client.active,
           req.params.id,
@@ -196,6 +207,30 @@ router.delete('/:id', authMiddleware, (req, res) => {
         success: true,
         message: 'Cliente deletado com sucesso',
       });
+    },
+  );
+});
+
+// Servir logo do cliente (público)
+router.get('/:id/logo', (req, res) => {
+  db.get(
+    'SELECT logo_data, logo_mimetype, logo_filename FROM portfolio_clients WHERE id = ? AND active = 1',
+    [req.params.id],
+    (err, row) => {
+      if (err || !row || !row.logo_data) {
+        return res.status(404).json({
+          success: false,
+          message: 'Logo não encontrada',
+        });
+      }
+
+      res.set({
+        'Content-Type': row.logo_mimetype || 'image/png',
+        'Content-Disposition': `inline; filename="${row.logo_filename || 'logo.png'}"`,
+        'Cache-Control': 'public, max-age=31536000', // 1 ano
+      });
+
+      res.send(row.logo_data);
     },
   );
 });

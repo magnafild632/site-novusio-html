@@ -1158,19 +1158,71 @@ build_application() {
     
     log "✓ Build concluído com sucesso"
 
-    # Garantir diretório de uploads e copiar arquivos do repositório (sem sobrescrever existentes)
-    log "📁 Verificando diretório de uploads..."
+    # Garantir diretório de uploads e migrar da estrutura antiga
+    log "📁 Verificando e corrigindo estrutura de uploads..."
+    
+    # Criar nova estrutura
     mkdir -p "$PROJECT_DIR/client/uploads"
-    mkdir -p "/home/$USERNAME/uploads" 
+    mkdir -p "/home/$USERNAME/client/uploads"
+    
+    # Migrar imagens da pasta antiga para a nova (se existir)
+    if [[ -d "/home/$USERNAME/uploads" ]]; then
+        log "🔄 Migrando imagens da estrutura antiga..."
+        if [[ -n "$(ls -A /home/$USERNAME/uploads 2>/dev/null)" ]]; then
+            mv "/home/$USERNAME/uploads"/* "/home/$USERNAME/client/uploads/" 2>/dev/null || true
+            log "✅ Imagens migradas com sucesso"
+        fi
+        
+        # Remover pasta antiga se estiver vazia
+        if [[ -z "$(ls -A /home/$USERNAME/uploads 2>/dev/null)" ]]; then
+            rmdir "/home/$USERNAME/uploads" 2>/dev/null || true
+            log "🗑️  Pasta uploads antiga removida"
+        fi
+    fi
+    
+    # Sincronizar uploads do repositório
     if [[ -d "$PROJECT_DIR/client/uploads" ]]; then
-        log "⬆️  Sincronizando uploads do repositório para /home/$USERNAME/uploads..."
-        rsync -a --ignore-existing "$PROJECT_DIR/client/uploads/" "/home/$USERNAME/uploads/" || true
-        chown -R $USERNAME:$USERNAME "/home/$USERNAME/uploads"
-        # Garantir permissões para Nginx ler
-        find "/home/$USERNAME/uploads" -type d -exec chmod 755 {} + 2>/dev/null || true
-        find "/home/$USERNAME/uploads" -type f -exec chmod 644 {} + 2>/dev/null || true
-        # Recarregar Nginx para refletir alias
-        systemctl reload nginx 2>/dev/null || true
+        log "⬆️  Sincronizando uploads do repositório para /home/$USERNAME/client/uploads..."
+        rsync -a --ignore-existing "$PROJECT_DIR/client/uploads/" "/home/$USERNAME/client/uploads/" || true
+    fi
+    
+    # Configurar permissões corretas
+    chown -R $USERNAME:$USERNAME "/home/$USERNAME/client/uploads"
+    find "/home/$USERNAME/client/uploads" -type d -exec chmod 755 {} + 2>/dev/null || true
+    find "/home/$USERNAME/client/uploads" -type f -exec chmod 644 {} + 2>/dev/null || true
+    
+    # Atualizar banco de dados para migrar para BLOB
+    if [[ -f "/home/$USERNAME/database.sqlite" ]]; then
+        log "🗄️  Migrando banco de dados para BLOB..."
+        # Backup do banco
+        cp "/home/$USERNAME/database.sqlite" "/home/$USERNAME/database.sqlite.backup.$(date +%Y%m%d_%H%M%S)"
+        
+        # Executar migração para BLOB
+        cd "/home/$USERNAME"
+        sudo -u $USERNAME node server/migrate-to-blob.js 2>/dev/null || true
+        
+        log "✅ Banco de dados migrado para BLOB"
+    fi
+    
+    # Recarregar Nginx para refletir alias
+    systemctl reload nginx 2>/dev/null || true
+    
+    # Verificar se imagens do banco estão funcionando
+    log "🔍 Verificando se imagens do banco estão funcionando..."
+    sleep 3
+    
+    # Testar API do portfólio
+    if curl -s "http://localhost:3000/api/portfolio" | grep -q '"success":true'; then
+        log "✅ API do portfólio funcionando"
+    else
+        warning "⚠️  API do portfólio pode não estar funcionando"
+    fi
+    
+    # Testar API dos slides
+    if curl -s "http://localhost:3000/api/slides" | grep -q '"success":true'; then
+        log "✅ API dos slides funcionando"
+    else
+        warning "⚠️  API dos slides pode não estar funcionando"
     fi
 }
 

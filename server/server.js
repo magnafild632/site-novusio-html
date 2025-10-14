@@ -45,8 +45,8 @@ app.use(express.urlencoded({
     timeout: '300s'
 }));
 
-// Servir arquivos estáticos
-app.use('/uploads', express.static(path.join(__dirname, '../client/uploads')));
+// Nota: Uploads agora são servidos do banco de dados via rotas específicas
+// app.use('/uploads', express.static(path.join(__dirname, '../client/uploads')));
 
 // Em produção, servir arquivos do React build
 if (process.env.NODE_ENV === 'production') {
