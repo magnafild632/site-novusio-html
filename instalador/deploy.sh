@@ -60,10 +60,12 @@ show_menu() {
     echo "4. 📊 Status do Sistema"
     echo "5. 🔧 Manutenção Rápida"
     echo "6. 📝 Logs e Monitoramento"
-    echo "7. ❌ Sair"
-    echo "8. ⚡ Atualização Rápida (não interativa)"
+    echo "7. 🔍 Diagnóstico Nginx (Upload 413)"
+    echo "8. 🛠️  Corrigir Problemas de Upload"
+    echo "9. ❌ Sair"
+    echo "10. ⚡ Atualização Rápida (não interativa)"
     echo ""
-    read -p "Escolha uma opção [1-8]: " MENU_CHOICE
+    read -p "Escolha uma opção [1-10]: " MENU_CHOICE
 }
 
 # Atualização rápida (não interativa)
@@ -587,6 +589,61 @@ show_logs() {
     
     echo ""
     read -p "Pressione Enter para continuar..."
+}
+
+# Diagnóstico Nginx
+diagnose_nginx() {
+    echo -e "${CYAN}🔍 DIAGNÓSTICO NGINX${NC}"
+    echo "=================================="
+    echo "Este diagnóstico irá verificar:"
+    echo "  ✅ Status do Nginx"
+    echo "  ✅ Configurações de upload"
+    echo "  ✅ Limites de client_max_body_size"
+    echo "  ✅ Logs de erro"
+    echo "  ✅ Conectividade"
+    echo ""
+    read -p "Iniciar diagnóstico? (Y/n): " START_DIAGNOSIS
+    
+    if [[ "$START_DIAGNOSIS" =~ ^[Nn]$ ]]; then
+        echo -e "${YELLOW}❌ Diagnóstico cancelado${NC}"
+        return
+    fi
+    
+    # Executar script de diagnóstico se existir
+    if [[ -f "instalador/diagnosticar-nginx.sh" ]]; then
+        log "🔍 Executando diagnóstico do Nginx..."
+        bash "instalador/diagnosticar-nginx.sh"
+    else
+        echo -e "${RED}❌ Script de diagnóstico não encontrado${NC}"
+        echo "Execute manualmente: sudo ./instalador/diagnosticar-nginx.sh"
+    fi
+}
+
+# Corrigir problemas de upload
+fix_upload_issues() {
+    echo -e "${CYAN}🛠️ CORRIGIR PROBLEMAS DE UPLOAD${NC}"
+    echo "=================================="
+    echo "Este script irá corrigir:"
+    echo "  ✅ Erro 413 (Request Entity Too Large)"
+    echo "  ✅ Limites de upload para 50MB"
+    echo "  ✅ Configuração do Nginx"
+    echo "  ✅ Configuração do servidor Node.js"
+    echo ""
+    read -p "Aplicar correções? (Y/n): " APPLY_FIXES
+    
+    if [[ "$APPLY_FIXES" =~ ^[Nn]$ ]]; then
+        echo -e "${YELLOW}❌ Correções canceladas${NC}"
+        return
+    fi
+    
+    # Executar script de correção se existir
+    if [[ -f "instalador/corrigir-upload.sh" ]]; then
+        log "🛠️ Aplicando correções de upload..."
+        bash "instalador/corrigir-upload.sh"
+    else
+        echo -e "${RED}❌ Script de correção não encontrado${NC}"
+        echo "Execute manualmente: sudo ./instalador/corrigir-upload.sh"
+    fi
 }
 
 # Verificar se está rodando como root
@@ -1703,16 +1760,26 @@ main() {
                 show_logs
                 ;;
             7)
+                diagnose_nginx
+                echo ""
+                read -p "Pressione Enter para voltar ao menu..."
+                ;;
+            8)
+                fix_upload_issues
+                echo ""
+                read -p "Pressione Enter para voltar ao menu..."
+                ;;
+            9)
                 echo -e "${GREEN}👋 Até logo!${NC}"
                 exit 0
                 ;;
-            8)
+            10)
                 quick_update
                 echo ""
                 read -p "Pressione Enter para voltar ao menu..."
                 ;;
             *)
-                echo -e "${RED}❌ Opção inválida. Escolha entre 1-7.${NC}"
+                echo -e "${RED}❌ Opção inválida. Escolha entre 1-10.${NC}"
                 sleep 2
                 ;;
         esac
