@@ -82,14 +82,34 @@ quick_update() {
     log "📥 Forçando atualização completa do código..."
     cd /home/novusio
     
-    # Corrigir permissões do Git primeiro
+    # PRIMEIRO: Corrigir permissões do Git ANTES de qualquer operação
     log "🔧 Corrigindo permissões do Git..."
-    git config --global --add safe.directory /home/novusio || true
-    sudo -u novusio git config --global --add safe.directory /home/novusio || true
+    if [[ -d ".git" ]]; then
+        chown -R novusio:novusio .git
+        chmod -R 755 .git
+        
+        # Corrigir arquivos específicos
+        if [[ -f ".git/FETCH_HEAD" ]]; then
+            chown novusio:novusio .git/FETCH_HEAD
+            chmod 644 .git/FETCH_HEAD
+        fi
+        
+        if [[ -f ".git/index" ]]; then
+            chown novusio:novusio .git/index
+            chmod 644 .git/index
+        fi
+        
+        log "✅ Permissões do Git corrigidas"
+    fi
     
-    # Forçar atualização completa
-    git fetch --all
-    git reset --hard origin/main || git reset --hard origin/master
+    # Configurar Git
+    sudo -u novusio git config --global --add safe.directory /home/novusio || true
+    sudo -u novusio git config --global pull.rebase false 2>/dev/null || true
+    
+    # SEGUNDO: Agora fazer operações Git
+    log "📥 Atualizando código do repositório..."
+    sudo -u novusio git fetch --all
+    sudo -u novusio git reset --hard origin/main || sudo -u novusio git reset --hard origin/master
     sudo -u novusio git pull origin main || sudo -u novusio git pull origin master
     
     log "📦 Instalando dependências (server)..."
@@ -287,14 +307,34 @@ update_application() {
     # Atualizar código FORÇADAMENTE
     log "📥 Forçando atualização completa do código do repositório..."
     
-    # Corrigir permissões do Git primeiro
+    # PRIMEIRO: Corrigir permissões do Git ANTES de qualquer operação
     log "🔧 Corrigindo permissões do Git..."
-    git config --global --add safe.directory /home/novusio || true
-    sudo -u novusio git config --global --add safe.directory /home/novusio || true
+    if [[ -d ".git" ]]; then
+        chown -R novusio:novusio .git
+        chmod -R 755 .git
+        
+        # Corrigir arquivos específicos
+        if [[ -f ".git/FETCH_HEAD" ]]; then
+            chown novusio:novusio .git/FETCH_HEAD
+            chmod 644 .git/FETCH_HEAD
+        fi
+        
+        if [[ -f ".git/index" ]]; then
+            chown novusio:novusio .git/index
+            chmod 644 .git/index
+        fi
+        
+        log "✅ Permissões do Git corrigidas"
+    fi
     
-    # Forçar atualização
-    git fetch --all
-    git reset --hard origin/main || git reset --hard origin/master
+    # Configurar Git
+    sudo -u novusio git config --global --add safe.directory /home/novusio || true
+    sudo -u novusio git config --global pull.rebase false 2>/dev/null || true
+    
+    # SEGUNDO: Agora fazer operações Git
+    log "📥 Atualizando código do repositório..."
+    sudo -u novusio git fetch --all
+    sudo -u novusio git reset --hard origin/main || sudo -u novusio git reset --hard origin/master
     sudo -u novusio git pull origin main || sudo -u novusio git pull origin master
     
     # Instalar dependências
@@ -1097,7 +1137,7 @@ clone_repository() {
             fi
             
             # Atualizar código
-            git pull origin main || git pull origin master
+            sudo -u novusio git pull origin main || sudo -u novusio git pull origin master
             log "✓ Repositório atualizado"
         else
             # Não é um repositório git, fazer backup e clonar

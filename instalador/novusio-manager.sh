@@ -144,9 +144,53 @@ update_app() {
     # Parar aplicação
     sudo -u novusio pm2 stop "$APP_NAME"
     
-    # Atualizar código
-    log "📥 Atualizando código..."
-    git pull origin main
+    # PRIMEIRO: Corrigir permissões do Git ANTES de qualquer operação Git
+    log "🔧 Corrigindo permissões do Git..."
+    if [[ -d ".git" ]]; then
+        chown -R novusio:novusio .git
+        chmod -R 755 .git
+        
+        # Corrigir arquivos específicos que podem causar problemas
+        if [[ -f ".git/FETCH_HEAD" ]]; then
+            chown novusio:novusio .git/FETCH_HEAD
+            chmod 644 .git/FETCH_HEAD
+            log "✅ FETCH_HEAD corrigido"
+        fi
+        
+        if [[ -f ".git/index" ]]; then
+            chown novusio:novusio .git/index
+            chmod 644 .git/index
+            log "✅ index corrigido"
+        fi
+        
+        # Corrigir refs e objects também
+        if [[ -d ".git/refs" ]]; then
+            chown -R novusio:novusio .git/refs
+            chmod -R 755 .git/refs
+        fi
+        
+        if [[ -d ".git/objects" ]]; then
+            chown -R novusio:novusio .git/objects
+            chmod -R 755 .git/objects
+        fi
+        
+        log "✅ Todas as permissões do Git corrigidas"
+    fi
+    
+    # Configurar Git para evitar conflitos
+    log "⚙️  Configurando Git..."
+    sudo -u novusio git config --global pull.rebase false 2>/dev/null || true
+    sudo -u novusio git config --global user.name "Novusio Server" 2>/dev/null || true
+    sudo -u novusio git config --global user.email "admin@novusiopy.com" 2>/dev/null || true
+    
+    # SEGUNDO: Agora fazer o git pull
+    log "📥 Atualizando código do repositório..."
+    if ! sudo -u novusio git pull origin main; then
+        warning "⚠️  Git pull falhou, tentando resetar..."
+        sudo -u novusio git reset --hard HEAD 2>/dev/null || true
+        sudo -u novusio git clean -fd 2>/dev/null || true
+        sudo -u novusio git pull origin main
+    fi
     
     # Instalar dependências
     log "📦 Instalando dependências..."
@@ -245,6 +289,7 @@ cleanup_system() {
     
     log "✅ Limpeza concluída!"
 }
+
 
 # =============================================================================
 # COMANDOS DE SERVIÇOS

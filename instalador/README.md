@@ -121,7 +121,7 @@ sudo ./instalador/novusio-manager.sh start
 
 ### 🔄 Atualizações
 ```bash
-# Atualização rápida
+# Atualização rápida (inclui correção automática de permissões do Git)
 sudo ./instalador/novusio-manager.sh update
 
 # Deploy completo
