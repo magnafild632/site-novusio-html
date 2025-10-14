@@ -94,11 +94,10 @@ echo -e "   • Configurar .env automaticamente"
     echo ""
 }
 
-# Função para verificar se está rodando como usuário correto
+# Função para verificar se está rodando como root
 check_user() {
-    if [[ $EUID -eq 0 ]]; then
-        print_error "Este script não deve ser executado como root diretamente."
-        print_status "Execute como usuário normal e use sudo quando necessário."
+    if [[ $EUID -ne 0 ]]; then
+        print_error "Este script deve ser executado como root."
         exit 1
     fi
 }
@@ -125,8 +124,8 @@ check_dependencies() {
         
         if [[ "$install_deps" == "y" || "$install_deps" == "Y" ]]; then
             print_status "Instalando dependências..."
-            sudo apt update
-            sudo apt install -y "${missing_deps[@]}"
+            apt update
+            apt install -y "${missing_deps[@]}"
             print_success "Dependências instaladas"
         else
             print_error "Dependências necessárias não instaladas"
@@ -154,7 +153,7 @@ install_complete() {
         print_status "Iniciando instalação completa..."
         
         if [[ -f "./install.sh" ]]; then
-            sudo ./install.sh
+            ./install.sh
         else
             print_error "Script de instalação não encontrado: install.sh"
             return 1
@@ -190,7 +189,7 @@ update_app() {
         print_status "Iniciando atualização..."
         
         if [[ -f "./deploy.sh" ]]; then
-            sudo -u novusio ./deploy.sh
+            ./deploy.sh
         else
             print_error "Script de deploy não encontrado: deploy.sh"
             return 1
@@ -214,7 +213,7 @@ configure_env() {
         read -p "Editar arquivo .env existente? (y/N): " edit_existing
         
         if [[ "$edit_existing" == "y" || "$edit_existing" == "Y" ]]; then
-            sudo nano /opt/novusio/.env
+            nano /opt/novusio/.env
         else
             print_status "Criando novo arquivo .env..."
         fi
@@ -243,30 +242,30 @@ configure_env() {
     # DOMAIN
     read -p "Digite o domínio (ex: exemplo.com): " domain
     if [[ -n "$domain" ]]; then
-        sudo sed -i "s/DOMAIN=your-domain.com/DOMAIN=$domain/g" /opt/novusio/.env 2>/dev/null || true
-        echo "DOMAIN=$domain" | sudo tee -a /opt/novusio/.env > /dev/null
+        sed -i "s/DOMAIN=your-domain.com/DOMAIN=$domain/g" /opt/novusio/.env 2>/dev/null || true
+        echo "DOMAIN=$domain" | tee -a /opt/novusio/.env > /dev/null
     fi
     
     # EMAIL
     read -p "Digite o email para notificações: " email
     if [[ -n "$email" ]]; then
-        sudo sed -i "s/EMAIL=seu-email@exemplo.com/EMAIL=$email/g" /opt/novusio/.env 2>/dev/null || true
-        echo "EMAIL=$email" | sudo tee -a /opt/novusio/.env > /dev/null
+        sed -i "s/EMAIL=seu-email@exemplo.com/EMAIL=$email/g" /opt/novusio/.env 2>/dev/null || true
+        echo "EMAIL=$email" | tee -a /opt/novusio/.env > /dev/null
     fi
     
     # NODE_ENV
-    echo "NODE_ENV=production" | sudo tee -a /opt/novusio/.env > /dev/null
+    echo "NODE_ENV=production" | tee -a /opt/novusio/.env > /dev/null
     
     # PORT
-    echo "PORT=3000" | sudo tee -a /opt/novusio/.env > /dev/null
+    echo "PORT=3000" | tee -a /opt/novusio/.env > /dev/null
     
     # Definir permissões
-    sudo chown novusio:novusio /opt/novusio/.env
-    sudo chmod 600 /opt/novusio/.env
+    chown novusio:novusio /opt/novusio/.env
+    chmod 600 /opt/novusio/.env
     
     print_success "Arquivo .env configurado!"
     echo ""
-    print_status "Para editar manualmente: sudo nano /opt/novusio/.env"
+    print_status "Para editar manualmente: nano /opt/novusio/.env"
 }
 
 # Função para configurar SSL
@@ -287,7 +286,7 @@ configure_ssl() {
         print_status "Iniciando configuração SSL..."
         
         if [[ -f "./setup-ssl.sh" ]]; then
-            sudo ./setup-ssl.sh
+            ./setup-ssl.sh
         else
             print_error "Script de SSL não encontrado: setup-ssl.sh"
             return 1
@@ -318,7 +317,7 @@ backup_restore() {
         1)
             print_status "Criando backup manual..."
             if [[ -f "./backup.sh" ]]; then
-                sudo -u novusio ./backup.sh
+                ./backup.sh
             else
                 print_error "Script de backup não encontrado: backup.sh"
             fi
@@ -363,26 +362,26 @@ manage_services() {
     case $service_option in
         1)
             print_status "Iniciando aplicação..."
-            sudo systemctl start novusio
+            systemctl start novusio
             print_success "Aplicação iniciada"
             ;;
         2)
             print_status "Parando aplicação..."
-            sudo systemctl stop novusio
+            systemctl stop novusio
             print_success "Aplicação parada"
             ;;
         3)
             print_status "Reiniciando aplicação..."
-            sudo systemctl restart novusio
+            systemctl restart novusio
             print_success "Aplicação reiniciada"
             ;;
         4)
             print_status "Status dos serviços:"
-            sudo systemctl status novusio nginx fail2ban --no-pager
+            systemctl status novusio nginx fail2ban --no-pager
             ;;
         5)
             print_status "Logs em tempo real (Ctrl+C para sair):"
-            sudo journalctl -u novusio -f
+            journalctl -u novusio -f
             ;;
         0)
             return
@@ -480,7 +479,7 @@ support_logs() {
     case $support_option in
         1)
             print_status "Logs de erro recentes:"
-            sudo journalctl -u novusio --since "1 hour ago" | grep -i error | tail -20
+            journalctl -u novusio --since "1 hour ago" | grep -i error | tail -20
             ;;
         2)
             print_status "Informações do sistema:"
@@ -500,11 +499,11 @@ support_logs() {
             ;;
         5)
             print_status "Comandos de diagnóstico úteis:"
-            echo "• Logs da aplicação: sudo journalctl -u novusio -f"
-            echo "• Logs do Nginx: sudo tail -f /var/log/nginx/error.log"
-            echo "• Status dos serviços: sudo systemctl status novusio nginx"
-            echo "• Testar Nginx: sudo nginx -t"
-            echo "• Verificar SSL: sudo certbot certificates"
+            echo "• Logs da aplicação: journalctl -u novusio -f"
+            echo "• Logs do Nginx: tail -f /var/log/nginx/error.log"
+            echo "• Status dos serviços: systemctl status novusio nginx"
+            echo "• Testar Nginx: nginx -t"
+            echo "• Verificar SSL: certbot certificates"
             ;;
         0)
             return

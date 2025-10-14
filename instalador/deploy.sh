@@ -34,9 +34,9 @@ BACKUP_DIR="/opt/novusio/backups"
 LOG_DIR="/var/log/novusio"
 DEPLOY_USER="novusio"
 
-# Verificar se está rodando como usuário correto
-if [[ "$(whoami)" != "$DEPLOY_USER" ]]; then
-    print_error "Este script deve ser executado como usuário '$DEPLOY_USER'"
+# Verificar se está rodando como root
+if [[ $EUID -ne 0 ]]; then
+    print_error "Este script deve ser executado como root."
     exit 1
 fi
 
@@ -58,7 +58,7 @@ print_success "Backup criado: $BACKUP_FILE"
 
 # Parar aplicação
 print_status "⏹️ Parando aplicação..."
-sudo systemctl stop novusio || true
+systemctl stop novusio || true
 
 # Atualizar código
 print_status "📥 Atualizando código..."
@@ -76,13 +76,13 @@ fi
 
 # Instalar/atualizar dependências
 print_status "📦 Instalando dependências..."
-npm install --production
+su -s /bin/bash novusio -c "npm install --production"
 
 # Instalar dependências do cliente
 print_status "📦 Instalando dependências do cliente..."
 cd client
-npm install
-npm run build
+su -s /bin/bash novusio -c "npm install"
+su -s /bin/bash novusio -c "npm run build"
 cd ..
 
 # Verificar arquivo .env
@@ -108,25 +108,25 @@ fi
 print_status "🗄️ Verificando migrações do banco..."
 if [[ -f "server/migrate-to-blob.js" ]]; then
     print_status "Executando migração do banco..."
-    NODE_ENV=production node server/migrate-to-blob.js || true
+    su -s /bin/bash novusio -c "NODE_ENV=production node server/migrate-to-blob.js" || true
 fi
 
 # Inicializar banco se necessário
 print_status "🗄️ Verificando banco de dados..."
 if [[ ! -f "database.sqlite" ]]; then
     print_status "Inicializando banco de dados..."
-    NODE_ENV=production npm run init-db
+    su -s /bin/bash novusio -c "NODE_ENV=production npm run init-db"
 fi
 
 # Verificar permissões
 print_status "🔐 Verificando permissões..."
-sudo chown -R $DEPLOY_USER:$DEPLOY_USER "$APP_DIR"
-sudo chmod -R 755 "$APP_DIR"
-sudo chmod 600 "$APP_DIR/.env"
+chown -R novusio:novusio "$APP_DIR"
+chmod -R 755 "$APP_DIR"
+chmod 600 "$APP_DIR/.env"
 
 # Testar configuração do Nginx
 print_status "🌐 Testando configuração do Nginx..."
-if sudo nginx -t; then
+if nginx -t; then
     print_success "Configuração do Nginx válida"
 else
     print_error "Erro na configuração do Nginx"
@@ -135,11 +135,11 @@ fi
 
 # Recarregar configuração do Nginx
 print_status "🔄 Recarregando Nginx..."
-sudo systemctl reload nginx
+systemctl reload nginx
 
 # Iniciar aplicação
 print_status "🚀 Iniciando aplicação..."
-sudo systemctl start novusio
+systemctl start novusio
 
 # Aguardar aplicação inicializar
 print_status "⏳ Aguardando aplicação inicializar..."
@@ -147,11 +147,11 @@ sleep 10
 
 # Verificar se aplicação está rodando
 print_status "🔍 Verificando status da aplicação..."
-if sudo systemctl is-active --quiet novusio; then
+if systemctl is-active --quiet novusio; then
     print_success "✅ Aplicação iniciada com sucesso"
 else
     print_error "❌ Falha ao iniciar aplicação"
-    print_error "Verifique os logs: sudo journalctl -u novusio -f"
+    print_error "Verifique os logs: journalctl -u novusio -f"
     exit 1
 fi
 
@@ -165,9 +165,9 @@ fi
 
 # Verificar logs de erro
 print_status "📋 Verificando logs recentes..."
-if sudo journalctl -u novusio --since "5 minutes ago" | grep -i error > /dev/null; then
+if journalctl -u novusio --since "5 minutes ago" | grep -i error > /dev/null; then
     print_warning "⚠️ Erros encontrados nos logs recentes"
-    print_warning "Verifique: sudo journalctl -u novusio -f"
+    print_warning "Verifique: journalctl -u novusio -f"
 else
     print_success "✅ Nenhum erro encontrado nos logs recentes"
 fi
@@ -186,14 +186,14 @@ echo ""
 print_status "📋 Informações do deploy:"
 echo "• Data/Hora: $(date)"
 echo "• Backup: $BACKUP_FILE"
-echo "• Status: $(sudo systemctl is-active novusio)"
-echo "• Logs: sudo journalctl -u novusio -f"
+echo "• Status: $(systemctl is-active novusio)"
+echo "• Logs: journalctl -u novusio -f"
 echo ""
 print_status "🔧 Comandos úteis:"
-echo "• Status: sudo systemctl status novusio"
-echo "• Logs: sudo journalctl -u novusio -f"
-echo "• Restart: sudo systemctl restart novusio"
-echo "• Nginx: sudo systemctl status nginx"
+echo "• Status: systemctl status novusio"
+echo "• Logs: journalctl -u novusio -f"
+echo "• Restart: systemctl restart novusio"
+echo "• Nginx: systemctl status nginx"
 echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""

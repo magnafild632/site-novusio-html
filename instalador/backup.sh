@@ -37,9 +37,9 @@ TIMESTAMP=$(date +%Y%m%d-%H%M%S)
 BACKUP_NAME="novusio-backup-$TIMESTAMP"
 BACKUP_FILE="$BACKUP_DIR/$BACKUP_NAME.tar.gz"
 
-# Verificar se está rodando como usuário correto
-if [[ "$(whoami)" != "$BACKUP_USER" ]]; then
-    print_error "Este script deve ser executado como usuário '$BACKUP_USER'"
+# Verificar se está rodando como root
+if [[ $EUID -ne 0 ]]; then
+    print_error "Este script deve ser executado como root."
     exit 1
 fi
 
@@ -54,7 +54,7 @@ mkdir -p "$TEMP_DIR"
 
 # Parar aplicação temporariamente para backup consistente
 print_status "⏹️ Parando aplicação para backup consistente..."
-sudo systemctl stop novusio
+systemctl stop novusio
 
 # Aguardar aplicação parar completamente
 sleep 5
@@ -98,7 +98,7 @@ fi
 # Backup da configuração do Nginx
 print_status "🌐 Fazendo backup da configuração do Nginx..."
 if [[ -f "/etc/nginx/sites-available/novusio" ]]; then
-    sudo cp "/etc/nginx/sites-available/novusio" "$TEMP_DIR/nginx-novusio.conf"
+    cp "/etc/nginx/sites-available/novusio" "$TEMP_DIR/nginx-novusio.conf"
     print_success "Configuração do Nginx copiada"
 else
     print_warning "Configuração do Nginx não encontrada"
@@ -107,7 +107,7 @@ fi
 # Backup da configuração do SSL
 print_status "🔒 Fazendo backup dos certificados SSL..."
 if [[ -d "/etc/letsencrypt" ]]; then
-    sudo cp -r "/etc/letsencrypt" "$TEMP_DIR/letsencrypt"
+    cp -r "/etc/letsencrypt" "$TEMP_DIR/letsencrypt"
     print_success "Certificados SSL copiados"
 else
     print_warning "Certificados SSL não encontrados"
@@ -116,7 +116,7 @@ fi
 # Backup da configuração do Fail2ban
 print_status "🛡️ Fazendo backup da configuração do Fail2ban..."
 if [[ -f "/etc/fail2ban/jail.local" ]]; then
-    sudo cp "/etc/fail2ban/jail.local" "$TEMP_DIR/fail2ban-jail.conf"
+    cp "/etc/fail2ban/jail.local" "$TEMP_DIR/fail2ban-jail.conf"
     print_success "Configuração do Fail2ban copiada"
 else
     print_warning "Configuração do Fail2ban não encontrada"
@@ -145,9 +145,9 @@ Arquivos incluídos:
 
 Para restaurar:
 1. Extrair: tar -xzf $BACKUP_NAME.tar.gz
-2. Parar aplicação: sudo systemctl stop novusio
+2. Parar aplicação: systemctl stop novusio
 3. Restaurar arquivos
-4. Reiniciar aplicação: sudo systemctl start novusio
+4. Reiniciar aplicação: systemctl start novusio
 EOF
 
 # Criar arquivo de hash para verificação
@@ -174,17 +174,17 @@ rm -rf "$TEMP_DIR"
 
 # Reiniciar aplicação
 print_status "🚀 Reiniciando aplicação..."
-sudo systemctl start novusio
+systemctl start novusio
 
 # Aguardar aplicação inicializar
 sleep 10
 
 # Verificar se aplicação está rodando
-if sudo systemctl is-active --quiet novusio; then
+if systemctl is-active --quiet novusio; then
     print_success "✅ Aplicação reiniciada com sucesso"
 else
     print_error "❌ Falha ao reiniciar aplicação"
-    print_error "Verifique os logs: sudo journalctl -u novusio -f"
+    print_error "Verifique os logs: journalctl -u novusio -f"
 fi
 
 # Limpeza de backups antigos
