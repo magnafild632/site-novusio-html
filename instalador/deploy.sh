@@ -90,6 +90,19 @@ quick_update() {
         cd ..
     fi
     
+    # Atualizar configuração do Nginx
+    log "🌐 Atualizando configuração do Nginx..."
+    if [[ -f "instalador/nginx.conf" ]]; then
+        cp "instalador/nginx.conf" "/etc/nginx/sites-available/novusiopy"
+        # Recarregar nginx para aplicar mudanças
+        if nginx -t 2>/dev/null; then
+            systemctl reload nginx
+            log "✓ Configuração do Nginx atualizada com limites de upload corrigidos (50MB)"
+        else
+            warning "⚠️ Erro na configuração do Nginx, mas continuando..."
+        fi
+    fi
+    
     # Garantir permissões corretas para uploads
     log "📁 Verificando permissões de uploads..."
     if [[ -d "/home/novusio/uploads" ]]; then
@@ -239,6 +252,19 @@ update_application() {
         npm ci
         npm run build
         cd ..
+    fi
+    
+    # Atualizar configuração do Nginx
+    log "🌐 Atualizando configuração do Nginx..."
+    if [[ -f "instalador/nginx.conf" ]]; then
+        cp "instalador/nginx.conf" "/etc/nginx/sites-available/novusiopy"
+        # Recarregar nginx para aplicar mudanças
+        if nginx -t 2>/dev/null; then
+            systemctl reload nginx
+            log "✓ Configuração do Nginx atualizada com limites de upload corrigidos (50MB)"
+        else
+            warning "⚠️ Erro na configuração do Nginx, mas continuando..."
+        fi
     fi
     
     # Verificar configurações

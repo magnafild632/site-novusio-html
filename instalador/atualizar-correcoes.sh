@@ -30,6 +30,7 @@ echo "  ✅ Corrigir caminho do build (client/dist)"
 echo "  ✅ Adicionar favicon"
 echo "  ✅ Melhorar tratamento de erros"
 echo "  ✅ Fazer novo build"
+echo "  ✅ Atualizar configuração do Nginx (limites de upload 50MB)"
 echo "  ✅ Reiniciar aplicação"
 echo ""
 
@@ -98,7 +99,38 @@ else
 fi
 
 echo ""
-echo -e "${BLUE}[6/6]${NC} Reiniciando aplicação..."
+echo -e "${BLUE}[6/7]${NC} Atualizando configuração do Nginx..."
+
+# Atualizar nginx.conf se existir
+if [[ -f "instalador/nginx.conf" ]]; then
+    if command -v nginx &> /dev/null; then
+        # Fazer backup da configuração atual
+        if [[ -f "/etc/nginx/sites-available/novusiopy" ]]; then
+            cp "/etc/nginx/sites-available/novusiopy" "/etc/nginx/sites-available/novusiopy.backup.$(date +%Y%m%d_%H%M%S)"
+        fi
+        
+        # Copiar nova configuração
+        cp "instalador/nginx.conf" "/etc/nginx/sites-available/novusiopy"
+        
+        # Testar configuração
+        if nginx -t 2>/dev/null; then
+            systemctl reload nginx
+            echo -e "${GREEN}✓ Configuração do Nginx atualizada com limites de upload corrigidos (50MB)${NC}"
+        else
+            echo -e "${RED}❌ Erro na configuração do Nginx!${NC}"
+            echo "Revertendo para backup..."
+            cp "/etc/nginx/sites-available/novusiopy.backup."* "/etc/nginx/sites-available/novusiopy" 2>/dev/null || true
+            systemctl reload nginx
+        fi
+    else
+        echo -e "${YELLOW}⚠️ Nginx não instalado${NC}"
+    fi
+else
+    echo -e "${YELLOW}⚠️ Arquivo nginx.conf não encontrado${NC}"
+fi
+
+echo ""
+echo -e "${BLUE}[7/7]${NC} Reiniciando aplicação..."
 
 # Verificar se PM2 está instalado e sendo usado
 if command -v pm2 &> /dev/null; then
