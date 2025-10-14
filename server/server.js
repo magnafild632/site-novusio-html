@@ -66,6 +66,13 @@ const authMiddleware = require('./middleware/auth');
 const upload = require('./config/multer');
 
 app.post('/api/upload', authMiddleware, upload.single('image'), (req, res) => {
+  console.log('📁 Upload request received:', {
+    hasFile: !!req.file,
+    fileSize: req.file?.size,
+    fileMimetype: req.file?.mimetype,
+    fileName: req.file?.originalname
+  });
+
   if (!req.file) {
     return res.status(400).json({
       success: false,
@@ -115,6 +122,57 @@ app.use((req, res) => {
 app.use((err, req, res, next) => {
   console.error('❌ Erro no servidor:', err);
   console.error('Stack:', err.stack);
+  
+  // Tratamento específico para erros do Multer
+  if (err.code === 'LIMIT_FILE_SIZE') {
+    return res.status(413).json({
+      success: false,
+      message: 'Arquivo muito grande. O tamanho máximo permitido é 50MB.',
+    });
+  }
+  
+  if (err.code === 'LIMIT_UNEXPECTED_FILE') {
+    return res.status(400).json({
+      success: false,
+      message: 'Campo de arquivo inesperado.',
+    });
+  }
+  
+  if (err.code === 'LIMIT_FILE_COUNT') {
+    return res.status(400).json({
+      success: false,
+      message: 'Muitos arquivos enviados.',
+    });
+  }
+  
+  if (err.code === 'LIMIT_FIELD_KEY') {
+    return res.status(400).json({
+      success: false,
+      message: 'Nome do campo muito longo.',
+    });
+  }
+  
+  if (err.code === 'LIMIT_FIELD_VALUE') {
+    return res.status(400).json({
+      success: false,
+      message: 'Valor do campo muito longo.',
+    });
+  }
+  
+  if (err.code === 'LIMIT_FIELD_COUNT') {
+    return res.status(400).json({
+      success: false,
+      message: 'Muitos campos enviados.',
+    });
+  }
+  
+  if (err.code === 'LIMIT_PART_COUNT') {
+    return res.status(400).json({
+      success: false,
+      message: 'Muitas partes no formulário.',
+    });
+  }
+  
   res.status(500).json({
     success: false,
     message: err.message || 'Erro interno do servidor',

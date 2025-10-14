@@ -35,7 +35,7 @@ cp /etc/nginx/sites-available/$DOMAIN /etc/nginx/sites-available/$DOMAIN.backup-
 echo "📝 Corrigindo caminho do root..."
 
 sed -i 's|root /var/www/html;|# root /var/www/html;|g' /etc/nginx/sites-available/$DOMAIN
-sed -i 's|location / {|location / {\n        root /opt/novusio/client/dist;|g' /etc/nginx/sites-available/$DOMAIN
+sed -i 's|location / {|location / {\n        root /home/novusio/client/dist;|g' /etc/nginx/sites-available/$DOMAIN
 
 echo "🧪 Testando configuração..."
 if nginx -t; then

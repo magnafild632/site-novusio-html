@@ -14,8 +14,8 @@ After=network.target
 Type=forking
 User=novusio
 Group=novusio
-WorkingDirectory=/opt/novusio
-ExecStart=/usr/local/bin/pm2 start /opt/novusio/ecosystem.config.js --env production
+WorkingDirectory=/home/novusio
+ExecStart=/usr/local/bin/pm2 start /home/novusio/ecosystem.config.js --env production
 ExecReload=/usr/local/bin/pm2 reload all
 ExecStop=/usr/local/bin/pm2 kill
 Restart=always
@@ -26,7 +26,7 @@ NoNewPrivileges=true
 PrivateTmp=true
 ProtectSystem=strict
 ProtectHome=true
-ReadWritePaths=/opt/novusio /var/log/novusio /opt/backups/novusio
+ReadWritePaths=/home/novusio /var/log/novusio /opt/backups/novusio
 
 # Configurações de recursos
 LimitNOFILE=65536

@@ -15,7 +15,7 @@ set -e
 # Configurações
 BACKUP_DIR="/opt/backups/novusio"
 DATE=$(date +%Y%m%d_%H%M%S)
-PROJECT_DIR="/opt/novusio"
+PROJECT_DIR="/home/novusio"
 RETENTION_DAYS=30
 LOG_FILE="/var/log/novusio-backup.log"
 

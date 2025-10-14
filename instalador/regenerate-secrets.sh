@@ -36,7 +36,7 @@ if [[ ! "$CONFIRM" =~ ^[Yy]$ ]]; then
 fi
 
 # Diretório do projeto
-PROJECT_DIR="/opt/novusio"
+PROJECT_DIR="/home/novusio"
 
 if [[ ! -d "$PROJECT_DIR" ]]; then
     echo -e "${RED}❌ Projeto não encontrado em $PROJECT_DIR${NC}"

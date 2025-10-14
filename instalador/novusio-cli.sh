@@ -52,7 +52,7 @@ check_root() {
 # Iniciar aplicação
 start_app() {
     echo -e "${GREEN}🚀 Iniciando aplicação...${NC}"
-    cd /opt/novusio
+    cd /home/novusio
     sudo -u novusio pm2 start ecosystem.config.js --env production
     echo -e "${GREEN}✅ Aplicação iniciada!${NC}"
 }
@@ -91,7 +91,7 @@ logs_app() {
 # Atualizar aplicação
 update_app() {
     echo -e "${BLUE}🔄 Atualizando aplicação...${NC}"
-    cd /opt/novusio
+    cd /home/novusio
     
     # Backup antes da atualização
     echo -e "${YELLOW}💾 Criando backup...${NC}"

@@ -57,6 +57,14 @@ router.get('/:id', (req, res) => {
 
 // Criar cliente (protegido)
 router.post('/', authMiddleware, upload.single('logo'), (req, res) => {
+  console.log('📁 Portfolio upload request:', {
+    hasFile: !!req.file,
+    fileSize: req.file?.size,
+    fileMimetype: req.file?.mimetype,
+    fileName: req.file?.originalname,
+    body: req.body
+  });
+
   const { name, order_position, active } = req.body;
 
   if (!name) {

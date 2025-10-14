@@ -38,21 +38,37 @@ api.interceptors.response.use(
 export const uploadFile = async (endpoint, formData, method = 'POST') => {
   const token = localStorage.getItem('admin_token');
 
-  const response = await fetch(`/api${endpoint}`, {
-    method: method,
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-    body: formData,
-  });
+  try {
+    const response = await fetch(`/api${endpoint}`, {
+      method: method,
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      body: formData,
+    });
 
-  const data = await response.json();
+    const data = await response.json();
 
-  if (!response.ok) {
-    throw new Error(data.message || 'Error en upload');
+    if (!response.ok) {
+      // Mensagens de erro mais específicas
+      if (response.status === 413) {
+        throw new Error('Arquivo muito grande. O tamanho máximo permitido é 50MB.');
+      } else if (response.status === 400) {
+        throw new Error(data.message || 'Arquivo inválido ou formato não suportado.');
+      } else if (response.status === 500) {
+        throw new Error('Erro interno do servidor. Tente novamente.');
+      } else {
+        throw new Error(data.message || 'Erro no upload do arquivo.');
+      }
+    }
+
+    return data;
+  } catch (error) {
+    if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
+      throw new Error('Erro de conexão. Verifique sua internet e tente novamente.');
+    }
+    throw error;
   }
-
-  return data;
 };
 
 export default api;

@@ -16,7 +16,7 @@ set -e
 # Configurações
 LOG_FILE="/var/log/novusio-monitor.log"
 ALERT_LOG="/var/log/novusio-alerts.log"
-PROJECT_DIR="/opt/novusio"
+PROJECT_DIR="/home/novusio"
 APP_NAME="novusio-server"
 DOMAIN="novusio.com"  # Substitua pelo seu domínio
 

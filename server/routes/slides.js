@@ -57,6 +57,14 @@ router.get('/:id', (req, res) => {
 
 // Criar slide (protegido)
 router.post('/', authMiddleware, upload.single('image'), (req, res) => {
+  console.log('📁 Slide upload request:', {
+    hasFile: !!req.file,
+    fileSize: req.file?.size,
+    fileMimetype: req.file?.mimetype,
+    fileName: req.file?.originalname,
+    body: req.body
+  });
+
   const { title, subtitle, order_position, active } = req.body;
 
   const image_url = req.file ? `/uploads/${req.file.filename}` : '';

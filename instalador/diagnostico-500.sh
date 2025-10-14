@@ -24,25 +24,25 @@ curl -v http://localhost:3000 2>&1 | head -20
 
 echo ""
 echo "📋 Variáveis de ambiente (.env):"
-if [ -f "/opt/novusio/.env" ]; then
+if [ -f "/home/novusio/.env" ]; then
     echo "✅ Arquivo .env existe"
     echo "Verificando variáveis críticas:"
-    grep -E "NODE_ENV|PORT|JWT_SECRET|DB_PATH" /opt/novusio/.env | sed 's/=.*/=***/'
+    grep -E "NODE_ENV|PORT|JWT_SECRET|DB_PATH" /home/novusio/.env | sed 's/=.*/=***/'
 else
     echo "❌ Arquivo .env NÃO existe!"
 fi
 
 echo ""
 echo "📂 Verificar estrutura de arquivos:"
-ls -la /opt/novusio/server/server.js
-ls -la /opt/novusio/database.sqlite
-ls -la /opt/novusio/client/dist/
+ls -la /home/novusio/server/server.js
+ls -la /home/novusio/database.sqlite
+ls -la /home/novusio/client/dist/
 
 echo ""
 echo "🔧 Comandos para corrigir:"
 echo "  1. Ver logs detalhados: sudo -u novusio pm2 logs"
 echo "  2. Reiniciar aplicação: sudo -u novusio pm2 restart novusio-server"
-echo "  3. Verificar .env: cat /opt/novusio/.env"
-echo "  4. Reinicializar DB: cd /opt/novusio && sudo -u novusio npm run init-db"
+echo "  3. Verificar .env: cat /home/novusio/.env"
+echo "  4. Reinicializar DB: cd /home/novusio && sudo -u novusio npm run init-db"
 
 

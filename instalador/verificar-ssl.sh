@@ -6,8 +6,8 @@ echo "🔍 Verificando configuração SSL do Novusio..."
 echo "============================================="
 
 # Verificar se está no servidor
-if [ ! -d "/opt/novusio" ]; then
-    echo "❌ Diretório /opt/novusio não encontrado"
+if [ ! -d "/home/novusio" ]; then
+    echo "❌ Diretório /home/novusio não encontrado"
     echo "Execute este script no servidor após o deploy"
     exit 1
 fi
