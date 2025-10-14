@@ -97,7 +97,9 @@ quick_update() {
         # Recarregar nginx para aplicar mudanças
         if nginx -t 2>/dev/null; then
             systemctl reload nginx
-            log "✓ Configuração do Nginx atualizada com limites de upload corrigidos (50MB)"
+            sleep 2
+            systemctl restart nginx
+            log "✓ Configuração do Nginx atualizada e reiniciada com limites de upload corrigidos (50MB)"
         else
             warning "⚠️ Erro na configuração do Nginx, mas continuando..."
         fi
@@ -261,7 +263,9 @@ update_application() {
         # Recarregar nginx para aplicar mudanças
         if nginx -t 2>/dev/null; then
             systemctl reload nginx
-            log "✓ Configuração do Nginx atualizada com limites de upload corrigidos (50MB)"
+            sleep 2
+            systemctl restart nginx
+            log "✓ Configuração do Nginx atualizada e reiniciada com limites de upload corrigidos (50MB)"
         else
             warning "⚠️ Erro na configuração do Nginx, mas continuando..."
         fi

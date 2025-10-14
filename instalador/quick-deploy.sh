@@ -85,7 +85,17 @@ cp instalador/nginx.conf /etc/nginx/sites-available/novusiopy
 sed -i "s/novusiopy.com/$DOMAIN/g" /etc/nginx/sites-available/novusiopy
 ln -sf /etc/nginx/sites-available/novusiopy /etc/nginx/sites-enabled/
 rm -f /etc/nginx/sites-enabled/default
-echo -e "${GREEN}✓ Nginx configurado com limites de upload corrigidos (50MB)${NC}"
+
+# Testar e reiniciar nginx
+if nginx -t; then
+    systemctl reload nginx
+    sleep 2
+    systemctl restart nginx
+    echo -e "${GREEN}✓ Nginx configurado e reiniciado com limites de upload corrigidos (50MB)${NC}"
+else
+    echo -e "${RED}❌ Erro na configuração do Nginx!${NC}"
+    exit 1
+fi
 
 echo -e "${YELLOW}🔒 Configurando SSL...${NC}"
 systemctl reload nginx

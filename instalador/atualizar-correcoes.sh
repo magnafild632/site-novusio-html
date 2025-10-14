@@ -115,12 +115,15 @@ if [[ -f "instalador/nginx.conf" ]]; then
         # Testar configuração
         if nginx -t 2>/dev/null; then
             systemctl reload nginx
-            echo -e "${GREEN}✓ Configuração do Nginx atualizada com limites de upload corrigidos (50MB)${NC}"
+            sleep 2
+            systemctl restart nginx
+            echo -e "${GREEN}✓ Configuração do Nginx atualizada e reiniciada com limites de upload corrigidos (50MB)${NC}"
         else
             echo -e "${RED}❌ Erro na configuração do Nginx!${NC}"
             echo "Revertendo para backup..."
             cp "/etc/nginx/sites-available/novusiopy.backup."* "/etc/nginx/sites-available/novusiopy" 2>/dev/null || true
             systemctl reload nginx
+            systemctl restart nginx
         fi
     else
         echo -e "${YELLOW}⚠️ Nginx não instalado${NC}"
