@@ -62,10 +62,11 @@ show_menu() {
     echo "6. 📝 Logs e Monitoramento"
     echo "7. 🔍 Diagnóstico Nginx (Upload 413)"
     echo "8. 🛠️  Corrigir Problemas de Upload"
-    echo "9. ❌ Sair"
-    echo "10. ⚡ Atualização Rápida (não interativa)"
+    echo "9. 🔥 Forçar Atualização Completa (Upload 413)"
+    echo "10. ❌ Sair"
+    echo "11. ⚡ Atualização Rápida (não interativa)"
     echo ""
-    read -p "Escolha uma opção [1-10]: " MENU_CHOICE
+    read -p "Escolha uma opção [1-11]: " MENU_CHOICE
 }
 
 # Atualização rápida (não interativa)
@@ -643,6 +644,40 @@ fix_upload_issues() {
     else
         echo -e "${RED}❌ Script de correção não encontrado${NC}"
         echo "Execute manualmente: sudo ./instalador/corrigir-upload.sh"
+    fi
+}
+
+# Forçar atualização completa
+force_complete_update() {
+    echo -e "${CYAN}🔥 FORÇAR ATUALIZAÇÃO COMPLETA${NC}"
+    echo "=================================="
+    echo "Este script irá FORÇAR:"
+    echo "  🔄 Atualização completa do código"
+    echo "  🔨 Novo build da aplicação"
+    echo "  🌐 Substituição FORÇADA do Nginx"
+    echo "  🛠️ Correções de upload (50MB)"
+    echo "  🔄 Reinicialização completa dos serviços"
+    echo ""
+    echo -e "${YELLOW}⚠️ ATENÇÃO: Esta operação é mais agressiva e irá:${NC}"
+    echo "  • Parar completamente o Nginx"
+    echo "  • Substituir TODAS as configurações"
+    echo "  • Fazer backup das configurações atuais"
+    echo "  • Reiniciar todos os serviços"
+    echo ""
+    read -p "Continuar com atualização forçada? (Y/n): " FORCE_UPDATE
+    
+    if [[ "$FORCE_UPDATE" =~ ^[Nn]$ ]]; then
+        echo -e "${YELLOW}❌ Atualização forçada cancelada${NC}"
+        return
+    fi
+    
+    # Executar script de atualização forçada se existir
+    if [[ -f "instalador/forcar-atualizacao.sh" ]]; then
+        log "🔥 Executando atualização forçada..."
+        bash "instalador/forcar-atualizacao.sh"
+    else
+        echo -e "${RED}❌ Script de atualização forçada não encontrado${NC}"
+        echo "Execute manualmente: sudo ./instalador/forcar-atualizacao.sh"
     fi
 }
 
@@ -1770,16 +1805,21 @@ main() {
                 read -p "Pressione Enter para voltar ao menu..."
                 ;;
             9)
+                force_complete_update
+                echo ""
+                read -p "Pressione Enter para voltar ao menu..."
+                ;;
+            10)
                 echo -e "${GREEN}👋 Até logo!${NC}"
                 exit 0
                 ;;
-            10)
+            11)
                 quick_update
                 echo ""
                 read -p "Pressione Enter para voltar ao menu..."
                 ;;
             *)
-                echo -e "${RED}❌ Opção inválida. Escolha entre 1-10.${NC}"
+                echo -e "${RED}❌ Opção inválida. Escolha entre 1-11.${NC}"
                 sleep 2
                 ;;
         esac
