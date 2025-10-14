@@ -15,7 +15,7 @@ module.exports = {
       script: 'server/server.js',
 
       // Diretório de trabalho
-      cwd: '/opt/novusio',
+      cwd: '/home/novusio',
 
       // Configurações de instâncias
       instances: 'max', // Usar todos os cores disponíveis
@@ -116,7 +116,7 @@ module.exports = {
       host: ['seu-servidor.com'],
       ref: 'origin/main',
       repo: 'https://github.com/seu-usuario/site-novusio-html.git',
-      path: '/opt/novusio',
+      path: '/home/novusio',
       'pre-deploy-local': '',
       'post-deploy':
         'npm ci && npm run build && pm2 reload ecosystem.config.js --env production',

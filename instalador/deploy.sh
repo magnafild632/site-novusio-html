@@ -61,8 +61,41 @@ show_menu() {
     echo "5. 🔧 Manutenção Rápida"
     echo "6. 📝 Logs e Monitoramento"
     echo "7. ❌ Sair"
+    echo "8. ⚡ Atualização Rápida (não interativa)"
     echo ""
-    read -p "Escolha uma opção [1-7]: " MENU_CHOICE
+    read -p "Escolha uma opção [1-8]: " MENU_CHOICE
+}
+
+# Atualização rápida (não interativa)
+quick_update() {
+    echo -e "${CYAN}⚡ ATUALIZAÇÃO RÁPIDA${NC}"
+    echo "=================================="
+    
+    if [[ ! -d "/home/novusio" ]]; then
+        error "❌ Projeto não encontrado em /home/novusio"
+    fi
+    
+    log "📥 Atualizando código..."
+    cd /home/novusio
+    sudo -u novusio git pull --rebase || git pull
+    
+    log "📦 Instalando dependências (server)..."
+    npm ci --production || npm install --production
+    
+    if [[ -d "client" ]]; then
+        log "📦 Instalando dependências (client) e build..."
+        cd client
+        npm ci || npm install
+        npm run build
+        cd ..
+    fi
+    
+    log "🔄 Reiniciando aplicação (PM2)..."
+    sudo -u novusio pm2 start ecosystem.config.js --env production || true
+    sudo -u novusio pm2 reload novusio-server || sudo -u novusio pm2 restart novusio-server || true
+    sudo -u novusio pm2 save
+    
+    log "✅ Atualização rápida concluída!"
 }
 
 # Deploy completo (função existente)
@@ -164,13 +197,13 @@ update_application() {
     echo "=================================="
     
     # Verificar se o projeto existe
-    if [[ ! -d "/opt/novusio" ]]; then
-        error "❌ Projeto não encontrado em /opt/novusio"
+    if [[ ! -d "/home/novusio" ]]; then
+        error "❌ Projeto não encontrado em /home/novusio"
     fi
     
     log "🔄 Iniciando atualização da aplicação..."
     
-    cd /opt/novusio
+    cd /home/novusio
     
     # Backup antes da atualização
     log "💾 Criando backup antes da atualização..."
@@ -218,8 +251,8 @@ NODE_ENV=production
 PORT=3000
 JWT_SECRET=$JWT_SECRET
 SESSION_SECRET=$SESSION_SECRET
-DB_PATH=/opt/novusio/database.sqlite
-UPLOAD_PATH=/opt/novusio/uploads
+DB_PATH=/home/novusio/database.sqlite
+UPLOAD_PATH=/home/novusio/uploads
 DOMAIN=$DOMAIN
 BASE_URL=https://$DOMAIN
 EOF
@@ -313,7 +346,7 @@ remove_project() {
     
     # Remover diretórios e arquivos
     log "🗑️ Removendo arquivos do projeto..."
-    rm -rf /opt/novusio
+    rm -rf /home/novusio
     rm -rf /var/log/novusio
     rm -rf /opt/backups/novusio
     
@@ -421,7 +454,7 @@ quick_maintenance() {
     
     # Reiniciar aplicação
     log "🔄 Reiniciando aplicação..."
-    cd /opt/novusio
+    cd /home/novusio
     sudo -u novusio pm2 restart novusio-server
     
     # Recarregar Nginx
@@ -440,9 +473,9 @@ quick_maintenance() {
     
     # Verificar e corrigir permissões
     log "🔐 Verificando permissões..."
-    if [[ -d "/opt/novusio" ]]; then
-        chown -R novusio:novusio /opt/novusio
-        chmod 600 /opt/novusio/.env 2>/dev/null || true
+    if [[ -d "/home/novusio" ]]; then
+        chown -R novusio:novusio /home/novusio
+        chmod 600 /home/novusio/.env 2>/dev/null || true
     fi
     
     log "✅ Manutenção rápida concluída!"
@@ -522,8 +555,8 @@ collect_info() {
     read -p "👤 Usuário do sistema (ex: novusio): " USERNAME
     read -p "🔧 Porta da aplicação [3000]: " APP_PORT
     APP_PORT=${APP_PORT:-3000}
-    read -p "📁 Diretório do projeto [/opt/novusio]: " PROJECT_DIR
-    PROJECT_DIR=${PROJECT_DIR:-/opt/novusio}
+    read -p "📁 Diretório do projeto [/home/novusio]: " PROJECT_DIR
+    PROJECT_DIR=${PROJECT_DIR:-/home/novusio}
     read -p "🔗 Repositório Git: " GIT_REPO
     
     # Validações básicas
@@ -1605,6 +1638,11 @@ main() {
             7)
                 echo -e "${GREEN}👋 Até logo!${NC}"
                 exit 0
+                ;;
+            8)
+                quick_update
+                echo ""
+                read -p "Pressione Enter para voltar ao menu..."
                 ;;
             *)
                 echo -e "${RED}❌ Opção inválida. Escolha entre 1-7.${NC}"

@@ -32,7 +32,7 @@ read -p "🔗 Repositório Git: " GIT_REPO
 
 # Configurações padrão
 USERNAME="novusio"
-PROJECT_DIR="/opt/novusio"
+PROJECT_DIR="/home/novusio"
 APP_PORT="3000"
 
 echo -e "${YELLOW}📦 Instalando dependências...${NC}"
