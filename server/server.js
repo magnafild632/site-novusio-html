@@ -61,36 +61,8 @@ app.use('/api/portfolio', require('./routes/portfolio'));
 app.use('/api/contact', require('./routes/contact'));
 app.use('/api/company', require('./routes/company'));
 
-// Rota de upload genérica
-const authMiddleware = require('./middleware/auth');
-const upload = require('./config/multer');
-
-app.post('/api/upload', authMiddleware, upload.single('image'), (req, res) => {
-  console.log('📁 Upload request received:', {
-    hasFile: !!req.file,
-    fileSize: req.file?.size,
-    fileMimetype: req.file?.mimetype,
-    fileName: req.file?.originalname
-  });
-
-  if (!req.file) {
-    return res.status(400).json({
-      success: false,
-      message: 'Nenhum arquivo foi enviado',
-    });
-  }
-
-  res.json({
-    success: true,
-    message: 'Arquivo enviado com sucesso',
-    data: {
-      filename: req.file.filename,
-      url: `/uploads/${req.file.filename}`,
-      size: req.file.size,
-      mimetype: req.file.mimetype,
-    },
-  });
-});
+// Nota: Upload genérico removido - usar rotas específicas do portfolio e slides
+// que salvam no banco de dados
 
 // Rota de health check
 app.get('/api/health', (req, res) => {
@@ -104,7 +76,7 @@ app.get('/api/health', (req, res) => {
 // Em produção, todas as rotas não-API servem o React app
 if (process.env.NODE_ENV === 'production') {
   app.get('*', (req, res) => {
-    if (!req.path.startsWith('/api') && !req.path.startsWith('/uploads')) {
+    if (!req.path.startsWith('/api')) {
       res.sendFile(path.join(__dirname, '../client/dist/index.html'));
     }
   });

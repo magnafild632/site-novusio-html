@@ -156,16 +156,8 @@ quick_update() {
         fi
     fi
     
-    # Garantir permissões corretas para uploads
-    log "📁 Verificando permissões de uploads..."
-    if [[ -d "/home/novusio/client/uploads" ]]; then
-        chown -R novusio:novusio "/home/novusio/client/uploads"
-        find "/home/novusio/client/uploads" -type d -exec chmod 755 {} + 2>/dev/null || true
-        find "/home/novusio/client/uploads" -type f -exec chmod 644 {} + 2>/dev/null || true
-        # Garantir que o diretório pai também tenha permissões corretas
-        chmod 755 /home/novusio
-        systemctl reload nginx 2>/dev/null || true
-    fi
+    # Nota: Uploads agora são salvos no banco de dados como BLOB
+    # Não é mais necessário configurar permissões de uploads locais
     
     log "🔄 Forçando reinicialização completa da aplicação (PM2)..."
     # Parar e deletar todos os processos PM2
@@ -405,7 +397,7 @@ PORT=3000
 JWT_SECRET=$JWT_SECRET
 SESSION_SECRET=$SESSION_SECRET
 DB_PATH=/home/novusio/database.sqlite
-UPLOAD_PATH=/home/novusio/client/uploads
+# UPLOAD_PATH não é mais necessário - uploads salvos no banco de dados
 DOMAIN=$DOMAIN
 BASE_URL=https://$DOMAIN
 EOF
@@ -417,16 +409,8 @@ EOF
         warning "⚠️ Revise e configure o arquivo .env conforme necessário!"
     fi
     
-    # Garantir permissões corretas para uploads
-    log "📁 Verificando permissões de uploads..."
-    if [[ -d "/home/novusio/client/uploads" ]]; then
-        chown -R novusio:novusio "/home/novusio/client/uploads"
-        find "/home/novusio/client/uploads" -type d -exec chmod 755 {} + 2>/dev/null || true
-        find "/home/novusio/client/uploads" -type f -exec chmod 644 {} + 2>/dev/null || true
-        # Garantir que o diretório pai também tenha permissões corretas
-        chmod 755 /home/novusio
-        systemctl reload nginx 2>/dev/null || true
-    fi
+    # Nota: Uploads agora são salvos no banco de dados como BLOB
+    # Não é mais necessário configurar permissões de uploads locais
     
     # Verificar e corrigir configurações do servidor
     log "🔧 Verificando e corrigindo configurações do servidor..."
@@ -1198,38 +1182,8 @@ build_application() {
     
     log "✓ Build concluído com sucesso"
 
-    # Garantir diretório de uploads e migrar da estrutura antiga
-    log "📁 Verificando e corrigindo estrutura de uploads..."
-    
-    # Criar nova estrutura
-    mkdir -p "$PROJECT_DIR/client/uploads"
-    mkdir -p "/home/$USERNAME/client/uploads"
-    
-    # Migrar imagens da pasta antiga para a nova (se existir)
-    if [[ -d "/home/$USERNAME/uploads" ]]; then
-        log "🔄 Migrando imagens da estrutura antiga..."
-        if [[ -n "$(ls -A /home/$USERNAME/uploads 2>/dev/null)" ]]; then
-            mv "/home/$USERNAME/uploads"/* "/home/$USERNAME/client/uploads/" 2>/dev/null || true
-            log "✅ Imagens migradas com sucesso"
-        fi
-        
-        # Remover pasta antiga se estiver vazia
-        if [[ -z "$(ls -A /home/$USERNAME/uploads 2>/dev/null)" ]]; then
-            rmdir "/home/$USERNAME/uploads" 2>/dev/null || true
-            log "🗑️  Pasta uploads antiga removida"
-        fi
-    fi
-    
-    # Sincronizar uploads do repositório
-    if [[ -d "$PROJECT_DIR/client/uploads" ]]; then
-        log "⬆️  Sincronizando uploads do repositório para /home/$USERNAME/client/uploads..."
-        rsync -a --ignore-existing "$PROJECT_DIR/client/uploads/" "/home/$USERNAME/client/uploads/" || true
-    fi
-    
-    # Configurar permissões corretas
-    chown -R $USERNAME:$USERNAME "/home/$USERNAME/client/uploads"
-    find "/home/$USERNAME/client/uploads" -type d -exec chmod 755 {} + 2>/dev/null || true
-    find "/home/$USERNAME/client/uploads" -type f -exec chmod 644 {} + 2>/dev/null || true
+    # Nota: Uploads agora são salvos no banco de dados como BLOB
+    # Estrutura de uploads locais não é mais necessária
     
     # Atualizar banco de dados para migrar para BLOB
     if [[ -f "/home/$USERNAME/database.sqlite" ]]; then
@@ -1306,7 +1260,7 @@ DB_PATH=$PROJECT_DIR/database.sqlite
 # =============================================================================
 # CONFIGURAÇÕES DE UPLOAD
 # =============================================================================
-UPLOAD_PATH=$PROJECT_DIR/client/uploads
+# UPLOAD_PATH não é mais necessário - uploads salvos no banco de dados
 MAX_FILE_SIZE=10485760
 ALLOWED_FILE_TYPES=jpg,jpeg,png,gif,pdf,doc,docx
 
@@ -1636,11 +1590,7 @@ server {
         proxy_set_header X-Forwarded-Proto $scheme;
     }
     
-    # Upload files
-    location /uploads/ {
-        alias PROJECT_DIR_PLACEHOLDER/uploads/;
-        expires 1y;
-        add_header Cache-Control "public";
+    # Nota: Upload files removido - imagens servidas do banco de dados via API
         
         # Security - bloquear scripts
         location ~ \.(php|jsp|asp|sh|cgi)$ {
@@ -1827,10 +1777,7 @@ if [[ -f "\$PROJECT_DIR/database.sqlite" ]]; then
     cp "\$PROJECT_DIR/database.sqlite" "\$BACKUP_DIR/database_\$DATE.sqlite"
 fi
 
-# Backup dos uploads
-if [[ -d "\$PROJECT_DIR/client/uploads" ]]; then
-    tar -czf "\$BACKUP_DIR/uploads_\$DATE.tar.gz" -C "\$PROJECT_DIR" uploads/
-fi
+# Nota: Backup de uploads removido - imagens agora estão no banco de dados
 
 # Backup do código (configurações importantes)
 tar -czf "\$BACKUP_DIR/config_\$DATE.tar.gz" -C "\$PROJECT_DIR" .env ecosystem.config.js
