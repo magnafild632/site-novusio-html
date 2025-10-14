@@ -3,7 +3,7 @@ const path = require('path');
 const fs = require('fs');
 
 // Criar pasta uploads se não existir
-const uploadDir = path.resolve(__dirname, '../../uploads');
+const uploadDir = path.resolve(__dirname, '../../client/uploads');
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
 }

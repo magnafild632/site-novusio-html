@@ -46,7 +46,7 @@ app.use(express.urlencoded({
 }));
 
 // Servir arquivos estáticos
-app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+app.use('/uploads', express.static(path.join(__dirname, '../client/uploads')));
 
 // Em produção, servir arquivos do React build
 if (process.env.NODE_ENV === 'production') {

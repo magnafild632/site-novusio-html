@@ -138,10 +138,10 @@ quick_update() {
     
     # Garantir permissões corretas para uploads
     log "📁 Verificando permissões de uploads..."
-    if [[ -d "/home/novusio/uploads" ]]; then
-        chown -R novusio:novusio "/home/novusio/uploads"
-        find "/home/novusio/uploads" -type d -exec chmod 755 {} + 2>/dev/null || true
-        find "/home/novusio/uploads" -type f -exec chmod 644 {} + 2>/dev/null || true
+    if [[ -d "/home/novusio/client/uploads" ]]; then
+        chown -R novusio:novusio "/home/novusio/client/uploads"
+        find "/home/novusio/client/uploads" -type d -exec chmod 755 {} + 2>/dev/null || true
+        find "/home/novusio/client/uploads" -type f -exec chmod 644 {} + 2>/dev/null || true
         # Garantir que o diretório pai também tenha permissões corretas
         chmod 755 /home/novusio
         systemctl reload nginx 2>/dev/null || true
@@ -365,7 +365,7 @@ PORT=3000
 JWT_SECRET=$JWT_SECRET
 SESSION_SECRET=$SESSION_SECRET
 DB_PATH=/home/novusio/database.sqlite
-UPLOAD_PATH=/home/novusio/uploads
+UPLOAD_PATH=/home/novusio/client/uploads
 DOMAIN=$DOMAIN
 BASE_URL=https://$DOMAIN
 EOF
@@ -379,10 +379,10 @@ EOF
     
     # Garantir permissões corretas para uploads
     log "📁 Verificando permissões de uploads..."
-    if [[ -d "/home/novusio/uploads" ]]; then
-        chown -R novusio:novusio "/home/novusio/uploads"
-        find "/home/novusio/uploads" -type d -exec chmod 755 {} + 2>/dev/null || true
-        find "/home/novusio/uploads" -type f -exec chmod 644 {} + 2>/dev/null || true
+    if [[ -d "/home/novusio/client/uploads" ]]; then
+        chown -R novusio:novusio "/home/novusio/client/uploads"
+        find "/home/novusio/client/uploads" -type d -exec chmod 755 {} + 2>/dev/null || true
+        find "/home/novusio/client/uploads" -type f -exec chmod 644 {} + 2>/dev/null || true
         # Garantir que o diretório pai também tenha permissões corretas
         chmod 755 /home/novusio
         systemctl reload nginx 2>/dev/null || true
@@ -1160,11 +1160,11 @@ build_application() {
 
     # Garantir diretório de uploads e copiar arquivos do repositório (sem sobrescrever existentes)
     log "📁 Verificando diretório de uploads..."
-    mkdir -p "$PROJECT_DIR/uploads"
+    mkdir -p "$PROJECT_DIR/client/uploads"
     mkdir -p "/home/$USERNAME/uploads" 
-    if [[ -d "$PROJECT_DIR/uploads" ]]; then
+    if [[ -d "$PROJECT_DIR/client/uploads" ]]; then
         log "⬆️  Sincronizando uploads do repositório para /home/$USERNAME/uploads..."
-        rsync -a --ignore-existing "$PROJECT_DIR/uploads/" "/home/$USERNAME/uploads/" || true
+        rsync -a --ignore-existing "$PROJECT_DIR/client/uploads/" "/home/$USERNAME/uploads/" || true
         chown -R $USERNAME:$USERNAME "/home/$USERNAME/uploads"
         # Garantir permissões para Nginx ler
         find "/home/$USERNAME/uploads" -type d -exec chmod 755 {} + 2>/dev/null || true
@@ -1214,7 +1214,7 @@ DB_PATH=$PROJECT_DIR/database.sqlite
 # =============================================================================
 # CONFIGURAÇÕES DE UPLOAD
 # =============================================================================
-UPLOAD_PATH=$PROJECT_DIR/uploads
+UPLOAD_PATH=$PROJECT_DIR/client/uploads
 MAX_FILE_SIZE=10485760
 ALLOWED_FILE_TYPES=jpg,jpeg,png,gif,pdf,doc,docx
 
@@ -1736,7 +1736,7 @@ if [[ -f "\$PROJECT_DIR/database.sqlite" ]]; then
 fi
 
 # Backup dos uploads
-if [[ -d "\$PROJECT_DIR/uploads" ]]; then
+if [[ -d "\$PROJECT_DIR/client/uploads" ]]; then
     tar -czf "\$BACKUP_DIR/uploads_\$DATE.tar.gz" -C "\$PROJECT_DIR" uploads/
 fi
 
