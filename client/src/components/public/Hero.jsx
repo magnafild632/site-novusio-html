@@ -52,8 +52,12 @@ const Hero = ({ slides = [] }) => {
               className="hero-image"
             />
             <div className="hero-content">
-              <h1 className="hero-title">{slide.title}</h1>
-              <p className="hero-subtitle">{slide.subtitle}</p>
+              {slide?.title?.trim() && (
+                <h1 className="hero-title">{slide.title}</h1>
+              )}
+              {slide?.subtitle?.trim() && (
+                <p className="hero-subtitle">{slide.subtitle}</p>
+              )}
             </div>
           </div>
         ))}

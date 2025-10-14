@@ -176,7 +176,7 @@ const SlideModal = ({ slide, onClose, onSubmit }) => {
             type="text"
             value={formData.title}
             onChange={e => setFormData({ ...formData, title: e.target.value })}
-            required
+            placeholder="Opcional"
           />
         </div>
 
@@ -188,7 +188,7 @@ const SlideModal = ({ slide, onClose, onSubmit }) => {
             onChange={e =>
               setFormData({ ...formData, subtitle: e.target.value })
             }
-            required
+            placeholder="Opcional"
           />
         </div>
 

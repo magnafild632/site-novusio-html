@@ -26,7 +26,7 @@ const AdminLayout = () => {
       <aside className="sidebar">
         <div className="sidebar-header">
           <div className="logo-small">
-            <span className="logo-text">N</span>
+            <img src="/uploads/logo.svg" alt="Logo" className="logo-img" />
           </div>
           <span className="company-name">NOVUSIO</span>
         </div>

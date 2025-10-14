@@ -302,7 +302,7 @@ const HomePage = () => {
           <div className="footer-content">
             <div className="footer-brand">
               <div className="footer-logo">
-                <span className="footer-logo-text">N</span>
+                <img src="/uploads/logo.svg" alt="Logo" className="footer-logo-img" />
               </div>
               <span className="footer-company-name">NOVUSIO</span>
             </div>

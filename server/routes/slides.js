@@ -59,13 +59,6 @@ router.get('/:id', (req, res) => {
 router.post('/', authMiddleware, upload.single('image'), (req, res) => {
   const { title, subtitle, order_position, active } = req.body;
 
-  if (!title || !subtitle) {
-    return res.status(400).json({
-      success: false,
-      message: 'Título e subtítulo são obrigatórios',
-    });
-  }
-
   const image_url = req.file ? `/uploads/${req.file.filename}` : '';
 
   if (!image_url && !req.body.image_url) {
@@ -85,8 +78,8 @@ router.post('/', authMiddleware, upload.single('image'), (req, res) => {
   db.run(
     query,
     [
-      title,
-      subtitle,
+      title ?? '',
+      subtitle ?? '',
       finalImageUrl,
       order_position || 0,
       active !== undefined ? active : 1,
@@ -104,8 +97,8 @@ router.post('/', authMiddleware, upload.single('image'), (req, res) => {
         message: 'Slide criado com sucesso',
         data: {
           id: this.lastID,
-          title,
-          subtitle,
+          title: title ?? '',
+          subtitle: subtitle ?? '',
           image_url: finalImageUrl,
           order_position: order_position || 0,
           active: active !== undefined ? active : 1,
@@ -143,8 +136,8 @@ router.put('/:id', authMiddleware, upload.single('image'), (req, res) => {
       db.run(
         query,
         [
-          title || slide.title,
-          subtitle || slide.subtitle,
+          title !== undefined ? title : slide.title,
+          subtitle !== undefined ? subtitle : slide.subtitle,
           image_url || slide.image_url,
           order_position !== undefined ? order_position : slide.order_position,
           active !== undefined ? active : slide.active,

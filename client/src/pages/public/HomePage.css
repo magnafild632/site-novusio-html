@@ -7,6 +7,7 @@
 .section-header {
   text-align: center;
   margin-bottom: 4rem;
+  animation: hpFadeUp .5s ease both;
 }
 
 .section-title {
@@ -47,12 +48,21 @@
   padding: 1.5rem;
   box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
   transition: all 0.3s ease;
+  animation: hpFadeUp .5s ease both;
 }
 
 .service-card:hover {
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
   transform: translateY(-2px);
 }
+
+/* Stagger services */
+.services-grid .service-card:nth-child(1) { animation-delay: .05s; }
+.services-grid .service-card:nth-child(2) { animation-delay: .12s; }
+.services-grid .service-card:nth-child(3) { animation-delay: .18s; }
+.services-grid .service-card:nth-child(4) { animation-delay: .24s; }
+.services-grid .service-card:nth-child(5) { animation-delay: .30s; }
+.services-grid .service-card:nth-child(6) { animation-delay: .36s; }
 
 .service-icon {
   width: 3rem;
@@ -131,12 +141,21 @@
   justify-content: center;
   box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
   transition: all 0.3s ease;
+  animation: hpFadeUp .5s ease both;
 }
 
 .portfolio-item:hover {
   box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
   transform: translateY(-2px);
 }
+
+/* Stagger portfolio */
+.portfolio-grid .portfolio-item:nth-child(1) { animation-delay: .05s; }
+.portfolio-grid .portfolio-item:nth-child(2) { animation-delay: .12s; }
+.portfolio-grid .portfolio-item:nth-child(3) { animation-delay: .18s; }
+.portfolio-grid .portfolio-item:nth-child(4) { animation-delay: .24s; }
+.portfolio-grid .portfolio-item:nth-child(5) { animation-delay: .30s; }
+.portfolio-grid .portfolio-item:nth-child(6) { animation-delay: .36s; }
 
 .portfolio-logo {
   max-width: 100%;
@@ -208,6 +227,7 @@
   font-size: 1.875rem;
   font-weight: 600;
   margin-bottom: 2rem;
+  animation: hpFadeUp .5s ease both .05s;
 }
 
 .values-grid {
@@ -228,11 +248,26 @@
   padding: 1.5rem;
   box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
   transition: all 0.2s;
+  animation: hpFadeUp .5s ease both;
 }
 
 .value-card:hover {
   box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
   transform: translateY(-2px);
+}
+
+/* FadeUp keyframes reused */
+@keyframes hpFadeUp {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .section-header,
+  .service-card,
+  .portfolio-item,
+  .values-title,
+  .value-card { animation: none; }
 }
 
 /* Contact */
@@ -392,24 +427,21 @@
 .footer-brand {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 0.1rem;
 }
 
 .footer-logo {
-  width: 3rem;
-  height: 3rem;
-  background-color: #0d9488;
-  border-radius: 0.5rem;
+  width: 4rem;
+  height: 4rem;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.footer-logo-text {
-  color: white;
-  font-size: 1.5rem;
-  font-weight: 700;
-}
+.footer-logo-img { width: 100%; height: 100%; object-fit: contain; display: block; }
+
+.footer-logo-img { transition: transform .25s ease; }
+.footer-brand:hover .footer-logo-img { transform: translateY(-1px) scale(1.03); }
 
 .footer-company-name {
   font-size: 1.25rem;
