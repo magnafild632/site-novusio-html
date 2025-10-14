@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import api from '../../services/api';
 import Navbar from '../../components/public/Navbar';
 import Hero from '../../components/public/Hero';
+import sanitizeSvgFragment from '../../utils/sanitizeSvg';
 import './HomePage.css';
 
 const HomePage = () => {
@@ -77,30 +78,41 @@ const HomePage = () => {
           </div>
 
           <div className="services-grid">
-            {services.map(service => (
-              <div key={service.id} className="service-card">
-                <div className="service-icon">
-                  <svg
-                    width="24"
-                    height="24"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    dangerouslySetInnerHTML={{ __html: service.icon }}
-                  />
+            {services.map(service => {
+              const sanitizedIcon = sanitizeSvgFragment(service.icon);
+              const hasIcon = Boolean(sanitizedIcon);
+
+              return (
+                <div key={service.id} className="service-card">
+                  <div className="service-icon">
+                    {hasIcon ? (
+                      <svg
+                        width="24"
+                        height="24"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        dangerouslySetInnerHTML={{ __html: sanitizedIcon }}
+                      />
+                    ) : (
+                      <span role="img" aria-label="Servicio">
+                        📋
+                      </span>
+                    )}
+                  </div>
+                  <h3 className="service-title">{service.title}</h3>
+                  <p className="service-description">{service.description}</p>
+                  {service.features && service.features.length > 0 && (
+                    <ul className="service-features">
+                      {service.features.map((feature, idx) => (
+                        <li key={`${service.id}-${idx}`}>{feature}</li>
+                      ))}
+                    </ul>
+                  )}
                 </div>
-                <h3 className="service-title">{service.title}</h3>
-                <p className="service-description">{service.description}</p>
-                {service.features && service.features.length > 0 && (
-                  <ul className="service-features">
-                    {service.features.map((feature, idx) => (
-                      <li key={`${service.id}-${idx}`}>{feature}</li>
-                    ))}
-                  </ul>
-                )}
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </section>

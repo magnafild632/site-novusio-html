@@ -3,6 +3,7 @@ import api from '../../services/api';
 import Modal from '../../components/Modal';
 import Toast from '../../components/Toast';
 import IconPicker from '../../components/IconPicker';
+import sanitizeSvgFragment from '../../utils/sanitizeSvg';
 import './Management.css';
 
 const ServicesManagement = () => {
@@ -91,36 +92,40 @@ const ServicesManagement = () => {
         {services.length === 0 ? (
           <p className="empty-message">Ningún servicio registrado</p>
         ) : (
-          services.map(service => (
-            <div key={service.id} className="data-card">
-              <div className="service-icon-display">
-                {service.icon ? (
-                  <div dangerouslySetInnerHTML={{ __html: service.icon }} />
-                ) : (
-                  <div className="icon-placeholder">📋</div>
-                )}
+          services.map(service => {
+            const sanitizedIcon = sanitizeSvgFragment(service.icon);
+
+            return (
+              <div key={service.id} className="data-card">
+                <div className="service-icon-display">
+                  {sanitizedIcon ? (
+                    <div dangerouslySetInnerHTML={{ __html: sanitizedIcon }} />
+                  ) : (
+                    <div className="icon-placeholder">📋</div>
+                  )}
+                </div>
+                <h3>{service.title}</h3>
+                <p>{service.description}</p>
+                <div className="card-actions">
+                  <button
+                    className="btn btn-sm btn-outline"
+                    onClick={() => {
+                      setEditingService(service);
+                      setShowModal(true);
+                    }}
+                  >
+                    Editar
+                  </button>
+                  <button
+                    className="btn btn-sm btn-danger"
+                    onClick={() => handleDelete(service.id)}
+                  >
+                    Eliminar
+                  </button>
+                </div>
               </div>
-              <h3>{service.title}</h3>
-              <p>{service.description}</p>
-              <div className="card-actions">
-                <button
-                  className="btn btn-sm btn-outline"
-                  onClick={() => {
-                    setEditingService(service);
-                    setShowModal(true);
-                  }}
-                >
-                  Editar
-                </button>
-                <button
-                  className="btn btn-sm btn-danger"
-                  onClick={() => handleDelete(service.id)}
-                >
-                  Eliminar
-                </button>
-              </div>
-            </div>
-          ))
+            );
+          })
         )}
       </div>
 

@@ -3,6 +3,30 @@ const cors = require('cors');
 const path = require('path');
 require('dotenv').config();
 
+const REQUIRED_ENV_VARS = ['JWT_SECRET'];
+const missingEnvVars = REQUIRED_ENV_VARS.filter(
+  variable => !process.env[variable],
+);
+
+if (missingEnvVars.length > 0) {
+  console.error(
+    `❌ Variáveis de ambiente obrigatórias ausentes: ${missingEnvVars.join(
+      ', ',
+    )}`,
+  );
+  console.error(
+    'Configure as variáveis exigidas e reinicie o servidor (arquivo .env ou variáveis de ambiente).',
+  );
+  process.exit(1);
+}
+
+if (!process.env.JWT_EXPIRES_IN) {
+  process.env.JWT_EXPIRES_IN = '1h';
+  console.warn(
+    '⚠️  JWT_EXPIRES_IN não definido. Aplicando valor padrão de 1h.',
+  );
+}
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 

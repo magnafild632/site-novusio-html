@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import './IconPicker.css';
+import sanitizeSvgFragment from '../utils/sanitizeSvg';
 
 const PREDEFINED_ICONS = [
   {
@@ -111,25 +112,31 @@ const IconPicker = ({ value, onChange }) => {
 
       {showPicker && (
         <div className="icon-picker-grid">
-          {PREDEFINED_ICONS.map((icon, idx) => (
-            <div
-              key={idx}
-              className={`icon-option ${value === icon.path ? 'selected' : ''}`}
-              onClick={() => selectIcon(icon)}
-              title={icon.name}
-            >
-              <svg
-                width="32"
-                height="32"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                dangerouslySetInnerHTML={{ __html: icon.path }}
-              />
-              <span>{icon.name}</span>
-            </div>
-          ))}
+          {PREDEFINED_ICONS.map((icon, idx) => {
+            const sanitizedIcon = sanitizeSvgFragment(icon.path);
+
+            return (
+              <div
+                key={idx}
+                className={`icon-option ${
+                  value === icon.path ? 'selected' : ''
+                }`}
+                onClick={() => selectIcon(icon)}
+                title={icon.name}
+              >
+                <svg
+                  width="32"
+                  height="32"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  dangerouslySetInnerHTML={{ __html: sanitizedIcon }}
+                />
+                <span>{icon.name}</span>
+              </div>
+            );
+          })}
         </div>
       )}
 

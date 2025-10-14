@@ -39,16 +39,25 @@ router.post('/login', (req, res) => {
         });
       }
 
-      // Gerar token JWT
-      const token = jwt.sign(
-        {
-          id: user.id,
-          email: user.email,
-          role: user.role,
-        },
-        process.env.JWT_SECRET,
-        { expiresIn: process.env.JWT_EXPIRES_IN },
-      );
+      let token;
+      try {
+        // Gerar token JWT
+        token = jwt.sign(
+          {
+            id: user.id,
+            email: user.email,
+            role: user.role,
+          },
+          process.env.JWT_SECRET,
+          { expiresIn: process.env.JWT_EXPIRES_IN },
+        );
+      } catch (signError) {
+        console.error('Erro ao gerar token JWT:', signError);
+        return res.status(500).json({
+          success: false,
+          message: 'Erro ao gerar credenciais de acesso',
+        });
+      }
 
       res.json({
         success: true,

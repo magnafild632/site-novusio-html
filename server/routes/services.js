@@ -2,6 +2,108 @@ const express = require('express');
 const router = express.Router();
 const db = require('../config/database');
 const authMiddleware = require('../middleware/auth');
+const sanitizeSvgFragment = require('../utils/svgSanitizer');
+
+const parseFeaturesFromDb = (rawFeatures, serviceId) => {
+  if (!rawFeatures) {
+    return [];
+  }
+
+  try {
+    const parsed = JSON.parse(rawFeatures);
+
+    if (!Array.isArray(parsed)) {
+      throw new Error('formato inválido');
+    }
+
+    return parsed
+      .map(item => (typeof item === 'string' ? item.trim() : String(item)))
+      .filter(Boolean);
+  } catch (error) {
+    console.error(
+      `Erro ao processar features do serviço ${serviceId || 'desconhecido'}:`,
+      error.message,
+    );
+    throw new Error('Dados dos serviços corrompidos');
+  }
+};
+
+const normalizeFeaturesInput = rawFeatures => {
+  if (rawFeatures === undefined || rawFeatures === null || rawFeatures === '') {
+    return [];
+  }
+
+  let processed = rawFeatures;
+
+  if (typeof rawFeatures === 'string') {
+    try {
+      processed = JSON.parse(rawFeatures);
+    } catch (error) {
+      throw new Error(
+        'Formato inválido para características. Envie um array de textos.',
+      );
+    }
+  }
+
+  if (!Array.isArray(processed)) {
+    throw new Error(
+      'Formato inválido para características. Envie um array de textos.',
+    );
+  }
+
+  return processed
+    .map(item => (typeof item === 'string' ? item.trim() : String(item)))
+    .filter(Boolean);
+};
+
+const sanitizeIconInput = icon => {
+  if (!icon) {
+    return '';
+  }
+
+  return sanitizeSvgFragment(icon);
+};
+
+const sanitizeIconForOutput = icon => {
+  try {
+    return sanitizeIconInput(icon);
+  } catch (error) {
+    console.error('Ícone inválido encontrado no banco:', error.message);
+    return '';
+  }
+};
+
+const parseOrderPosition = value => {
+  if (value === undefined || value === null || value === '') {
+    return 0;
+  }
+
+  const parsed = parseInt(value, 10);
+
+  if (Number.isNaN(parsed)) {
+    throw new Error('Valor de ordem inválido');
+  }
+
+  return parsed;
+};
+
+const parseActiveFlag = value => {
+  if (value === undefined || value === null || value === '') {
+    return 1;
+  }
+
+  if (typeof value === 'string') {
+    const normalized = value.toLowerCase();
+    if (normalized === 'true' || normalized === '1') {
+      return 1;
+    }
+    if (normalized === 'false' || normalized === '0') {
+      return 0;
+    }
+  }
+
+  return Number(value) ? 1 : 0;
+};
 
 // Listar todos os serviços (público)
 router.get('/', (req, res) => {
@@ -19,16 +121,23 @@ router.get('/', (req, res) => {
       });
     }
 
-    // Parse das features (JSON string para array)
-    const servicesWithFeatures = rows.map(service => ({
-      ...service,
-      features: JSON.parse(service.features),
-    }));
+    try {
+      const servicesWithFeatures = rows.map(service => ({
+        ...service,
+        features: parseFeaturesFromDb(service.features, service.id),
+        icon: sanitizeIconForOutput(service.icon),
+      }));
 
-    res.json({
-      success: true,
-      data: servicesWithFeatures,
-    });
+      res.json({
+        success: true,
+        data: servicesWithFeatures,
+      });
+    } catch (processingError) {
+      return res.status(500).json({
+        success: false,
+        message: 'Erro ao processar dados dos serviços',
+      });
+    }
   });
 });
 
@@ -53,7 +162,8 @@ router.get('/:id', (req, res) => {
       success: true,
       data: {
         ...row,
-        features: JSON.parse(row.features),
+        features: parseFeaturesFromDb(row.features, row.id),
+        icon: sanitizeIconForOutput(row.icon),
       },
     });
   });
@@ -61,10 +171,7 @@ router.get('/:id', (req, res) => {
 
 // Criar serviço (protegido)
 router.post('/', authMiddleware, (req, res) => {
-  const { title, description, icon, features, order_position, active } =
-    req.body;
-
-  console.log('Dados recebidos:', req.body);
+  const { title, description, icon, features, order_position, active } = req.body;
 
   if (!title || !description) {
     return res.status(400).json({
@@ -73,8 +180,37 @@ router.post('/', authMiddleware, (req, res) => {
     });
   }
 
-  const featuresJson = JSON.stringify(features || []);
-  const iconValue = icon || '';
+  let parsedFeatures;
+  try {
+    parsedFeatures = normalizeFeaturesInput(features);
+  } catch (error) {
+    return res.status(400).json({
+      success: false,
+      message: error.message,
+    });
+  }
+
+  let sanitizedIcon;
+  try {
+    sanitizedIcon = sanitizeIconInput(icon);
+  } catch (error) {
+    return res.status(400).json({
+      success: false,
+      message: `Ícone inválido: ${error.message}`,
+    });
+  }
+
+  let orderPositionValue = 0;
+  try {
+    orderPositionValue = parseOrderPosition(order_position);
+  } catch (error) {
+    return res.status(400).json({
+      success: false,
+      message: error.message,
+    });
+  }
+
+  const activeValue = parseActiveFlag(active);
 
   const query = `
     INSERT INTO services (title, description, icon, features, order_position, active)
@@ -86,10 +222,10 @@ router.post('/', authMiddleware, (req, res) => {
     [
       title,
       description,
-      iconValue,
-      featuresJson,
-      order_position || 0,
-      active !== undefined ? active : 1,
+      sanitizedIcon,
+      JSON.stringify(parsedFeatures),
+      orderPositionValue,
+      activeValue,
     ],
     function (err) {
       if (err) {
@@ -107,10 +243,10 @@ router.post('/', authMiddleware, (req, res) => {
           id: this.lastID,
           title,
           description,
-          icon: iconValue,
-          features,
-          order_position: order_position || 0,
-          active: active !== undefined ? active : 1,
+          icon: sanitizedIcon,
+          features: parsedFeatures,
+          order_position: orderPositionValue,
+          active: activeValue,
         },
       });
     },
@@ -119,8 +255,7 @@ router.post('/', authMiddleware, (req, res) => {
 
 // Atualizar serviço (protegido)
 router.put('/:id', authMiddleware, (req, res) => {
-  const { title, description, icon, features, order_position, active } =
-    req.body;
+  const { title, description, icon, features, order_position, active } = req.body;
 
   db.get(
     'SELECT * FROM services WHERE id = ?',
@@ -133,9 +268,50 @@ router.put('/:id', authMiddleware, (req, res) => {
         });
       }
 
-      const featuresJson = features
-        ? JSON.stringify(features)
-        : service.features;
+      let updatedFeatures;
+      if (features !== undefined) {
+        try {
+          updatedFeatures = normalizeFeaturesInput(features);
+        } catch (error) {
+          return res.status(400).json({
+            success: false,
+            message: error.message,
+          });
+        }
+      } else {
+        try {
+          updatedFeatures = parseFeaturesFromDb(service.features, service.id);
+        } catch (error) {
+          updatedFeatures = [];
+        }
+      }
+
+      let iconValue = service.icon;
+      if (icon !== undefined) {
+        try {
+          iconValue = sanitizeIconInput(icon);
+        } catch (error) {
+          return res.status(400).json({
+            success: false,
+            message: `Ícone inválido: ${error.message}`,
+          });
+        }
+      }
+
+      let orderPositionValue = service.order_position;
+      if (order_position !== undefined) {
+        try {
+          orderPositionValue = parseOrderPosition(order_position);
+        } catch (error) {
+          return res.status(400).json({
+            success: false,
+            message: error.message,
+          });
+        }
+      }
+
+      const activeValue =
+        active !== undefined ? parseActiveFlag(active) : service.active;
 
       const query = `
       UPDATE services 
@@ -148,12 +324,10 @@ router.put('/:id', authMiddleware, (req, res) => {
         [
           title || service.title,
           description || service.description,
-          icon || service.icon,
-          featuresJson,
-          order_position !== undefined
-            ? order_position
-            : service.order_position,
-          active !== undefined ? active : service.active,
+          iconValue,
+          JSON.stringify(updatedFeatures),
+          orderPositionValue,
+          activeValue,
           req.params.id,
         ],
         err => {
