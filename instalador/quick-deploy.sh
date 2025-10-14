@@ -70,6 +70,8 @@ if [[ -d "$PROJECT_DIR/uploads" ]]; then
     chown -R $USERNAME:$USERNAME "/home/$USERNAME/uploads"
     find "/home/$USERNAME/uploads" -type d -exec chmod 755 {} + 2>/dev/null || true
     find "/home/$USERNAME/uploads" -type f -exec chmod 644 {} + 2>/dev/null || true
+    # Garantir que o diretório pai também tenha permissões corretas
+    chmod 755 "/home/$USERNAME"
 fi
 
 echo -e "${YELLOW}⚙️ Configurando PM2...${NC}"

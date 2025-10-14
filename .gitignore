@@ -3,9 +3,9 @@ node_modules/
 .DS_Store
 *.log
 database.sqlite
-uploads/*.jpg
-uploads/*.jpeg
-uploads/*.png
+#uploads/*.jpg
+#uploads/*.jpeg
+#uploads/*.png
 uploads/*.gif
 uploads/*.webp
 !uploads/.gitkeep

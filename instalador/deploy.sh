@@ -90,6 +90,17 @@ quick_update() {
         cd ..
     fi
     
+    # Garantir permissões corretas para uploads
+    log "📁 Verificando permissões de uploads..."
+    if [[ -d "/home/novusio/uploads" ]]; then
+        chown -R novusio:novusio "/home/novusio/uploads"
+        find "/home/novusio/uploads" -type d -exec chmod 755 {} + 2>/dev/null || true
+        find "/home/novusio/uploads" -type f -exec chmod 644 {} + 2>/dev/null || true
+        # Garantir que o diretório pai também tenha permissões corretas
+        chmod 755 /home/novusio
+        systemctl reload nginx 2>/dev/null || true
+    fi
+    
     log "🔄 Reiniciando aplicação (PM2)..."
     sudo -u novusio pm2 start ecosystem.config.js --env production || true
     sudo -u novusio pm2 reload novusio-server || sudo -u novusio pm2 restart novusio-server || true
@@ -263,6 +274,17 @@ EOF
         
         log "✓ Arquivo .env criado com secrets seguros"
         warning "⚠️ Revise e configure o arquivo .env conforme necessário!"
+    fi
+    
+    # Garantir permissões corretas para uploads
+    log "📁 Verificando permissões de uploads..."
+    if [[ -d "/home/novusio/uploads" ]]; then
+        chown -R novusio:novusio "/home/novusio/uploads"
+        find "/home/novusio/uploads" -type d -exec chmod 755 {} + 2>/dev/null || true
+        find "/home/novusio/uploads" -type f -exec chmod 644 {} + 2>/dev/null || true
+        # Garantir que o diretório pai também tenha permissões corretas
+        chmod 755 /home/novusio
+        systemctl reload nginx 2>/dev/null || true
     fi
     
     # Reiniciar aplicação
