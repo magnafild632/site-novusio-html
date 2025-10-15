@@ -1,207 +1,194 @@
 # 🚀 Instruções de Deploy - Site Novusio
 
-## 📋 Resumo do que foi criado
+## 📋 Pré-requisitos
 
-A pasta `instalador/` contém todos os arquivos necessários para fazer deploy completo da aplicação em uma VPS:
+Antes de começar, certifique-se de que:
 
-### 🔧 Scripts Principais
+- ✅ Você tem acesso SSH ao servidor Ubuntu
+- ✅ O domínio está apontando para o IP do servidor
+- ✅ Você tem a URL do repositório Git do projeto
+- ✅ Você tem um email válido para os certificados SSL
 
-1. **`install.sh`** - Instalação automática completa
-2. **`setup-ssl.sh`** - Configuração SSL com Certbot
-3. **`deploy.sh`** - Deploy da aplicação
-4. **`backup.sh`** - Backup automático
-5. **`novusio-manager.sh`** - Gerenciador da aplicação
-6. **`regenerate-secrets.sh`** - Gerador de chaves seguras
+## 🚀 Instalação Passo a Passo
 
-### ⚙️ Configurações
-
-1. **`nginx.conf`** - Configuração Nginx com proxy reverso
-2. **`ecosystem.config.js`** - Configuração PM2
-3. **`novusio.service`** - Serviço systemd
-4. **`fail2ban.conf`** - Configuração Fail2ban
-5. **`fail2ban-filters.conf`** - Filtros de segurança
-6. **`env.production.template`** - Template de variáveis de ambiente
-
-## 🚀 Como fazer o deploy
-
-### 1. Preparar o servidor
+### 1. Conectar ao Servidor
 
 ```bash
-# Conectar via SSH
 ssh usuario@seu-servidor.com
-
-# Atualizar sistema
-sudo apt update && sudo apt upgrade -y
-
-# Instalar dependências básicas
-sudo apt install -y curl wget git unzip
 ```
 
-### 2. Fazer upload dos arquivos
+### 2. Clonar o Projeto
 
 ```bash
-# Clonar repositório ou fazer upload
 git clone https://github.com/seu-usuario/site-novusio-html.git
-cd site-novusio-html
-
-# OU fazer upload via SCP/SFTP
-scp -r . usuario@servidor:/home/usuario/site-novusio-html
+cd site-novusio-html/instalador
 ```
 
-### 3. Executar instalação
+### 3. Preparar Scripts
 
 ```bash
-# Tornar scripts executáveis
-chmod +x instalador/*.sh
-
-# Executar instalação automática
-sudo ./instalador/install.sh
+chmod +x *.sh
 ```
 
-### 4. Configurar variáveis de ambiente
+### 4. Executar Deploy
 
 ```bash
-# Editar arquivo de configuração
-sudo nano /opt/novusio/.env
-
-# Configurar com suas informações:
-DOMAIN=seu-dominio.com
-EMAIL=seu-email@exemplo.com
-JWT_SECRET=sua-chave-secreta-muito-forte
+./deploy.sh
 ```
 
-### 5. Configurar SSL
+O script irá solicitar:
+- 🌐 **Domínio**: `exemplo.com`
+- 👤 **Usuário Linux**: `ubuntu` (ou seu usuário)
+- 🔗 **URL Git**: `https://github.com/usuario/repositorio.git`
+- 🔌 **Porta**: `3000` (padrão)
+- 📧 **Email SSL**: `suporte@novusiopy.com` (padrão)
+
+### 5. Aguardar Instalação
+
+O processo levará alguns minutos e incluirá:
+- ✅ Instalação de dependências
+- ✅ Clonagem do projeto
+- ✅ Configuração do banco de dados
+- ✅ Build do projeto React
+- ✅ Configuração do Nginx
+- ✅ Configuração SSL
+- ✅ Configuração do firewall
+- ✅ Inicialização dos serviços
+
+## 🎛️ Gerenciamento
+
+### Menu Principal
 
 ```bash
-# Executar configuração SSL
-sudo ./instalador/setup-ssl.sh
+./menu.sh
 ```
 
-### 6. Iniciar aplicação
+Opções disponíveis:
+1. **Instalar Projeto** - Nova instalação
+2. **Atualizar Projeto** - Atualizar código
+3. **Ver Status** - Status do sistema
+4. **Gerenciar Logs** - Visualizar logs
+5. **Backup** - Fazer backup
+6. **Restaurar** - Restaurar backup
+7. **Remover** - Remover projeto
+
+### Comandos Úteis
 
 ```bash
-# Iniciar aplicação
-sudo systemctl start novusio
-
-# Verificar status
+# Status do serviço
 sudo systemctl status novusio
-```
 
-## 🔧 Comandos úteis
-
-### Gerenciar aplicação
-
-```bash
-# Usar o gerenciador
-novusio-manager status
-novusio-manager logs
-novusio-manager restart
-
-# Ou usar systemctl diretamente
-sudo systemctl start novusio
-sudo systemctl stop novusio
+# Reiniciar serviço
 sudo systemctl restart novusio
-sudo systemctl status novusio
-```
 
-### Ver logs
-
-```bash
-# Logs da aplicação
+# Ver logs
 sudo journalctl -u novusio -f
 
-# Logs do Nginx
-sudo tail -f /var/log/nginx/access.log
-sudo tail -f /var/log/nginx/error.log
+# Verificar sistema
+./verificar-sistema.sh
 
-# Logs do Fail2ban
-sudo tail -f /var/log/fail2ban.log
+# Backup manual
+./backup.sh
 ```
 
-### Backup e restore
+## 🔧 Configurações
+
+### Arquivo .env
+
+Localizado em: `/home/usuario/site-novusio/.env`
+
+```env
+NODE_ENV=production
+PORT=3000
+JWT_SECRET=seu_secret_jwt
+ADMIN_EMAIL=admin@seu-dominio.com
+ADMIN_PASSWORD=senha_gerada_automaticamente
+DOMAIN=seu-dominio.com
+```
+
+### Credenciais de Acesso
+
+Após a instalação, você receberá:
+- 📧 **Email**: `admin@seu-dominio.com`
+- 🔑 **Senha**: Gerada automaticamente
+
+⚠️ **IMPORTANTE**: Altere essas credenciais após o primeiro login!
+
+## 🌐 Acessos
+
+Após a instalação, você pode acessar:
+
+- **Site Principal**: `https://seu-dominio.com`
+- **Painel Admin**: `https://seu-dominio.com/admin`
+- **API**: `https://seu-dominio.com/api`
+
+## 🔒 Segurança
+
+O sistema inclui:
+
+- ✅ Firewall UFW configurado
+- ✅ Fail2ban para proteção SSH
+- ✅ SSL/TLS com Let's Encrypt
+- ✅ Senhas seguras geradas automaticamente
+- ✅ Logs de monitoramento
+
+## 💾 Backup
+
+### Backup Automático
 
 ```bash
 # Backup manual
-sudo -u novusio /opt/novusio/backup.sh
+./backup.sh
 
-# Listar backups
-ls -lh /opt/novusio/backups/
-
-# Deploy
-sudo -u novusio /opt/novusio/app/instalador/deploy.sh
+# Backup com retenção personalizada
+./backup.sh --retention 7
 ```
 
-## 🛡️ Segurança configurada
-
-- ✅ **Firewall UFW** - Portas 22, 80, 443 abertas
-- ✅ **Fail2ban** - Proteção contra ataques
-- ✅ **SSL/TLS** - Certificados automáticos
-- ✅ **Headers de segurança** - XSS, CSRF, etc.
-- ✅ **Rate limiting** - Proteção contra spam
-- ✅ **Backup automático** - Backup diário às 2:00 AM
-
-## 📊 Monitoramento
-
-### Status dos serviços
+### Restaurar Backup
 
 ```bash
-# Verificar todos os serviços
-sudo systemctl status novusio nginx fail2ban ufw
-
-# Verificar portas
-sudo netstat -tlnp | grep -E ":(80|443|3000)"
-```
-
-### Logs importantes
-
-```bash
-# Aplicação
-sudo journalctl -u novusio --since "1 hour ago"
-
-# Nginx
-sudo tail -f /var/log/nginx/novusio_access.log
-sudo tail -f /var/log/nginx/novusio_error.log
-
-# Sistema
-sudo tail -f /var/log/syslog
+./menu.sh
+# Escolher opção 6: Restaurar Backup
 ```
 
 ## 🔄 Atualizações
 
-### Deploy de atualizações
+### Atualizar Código
 
 ```bash
-# Fazer pull das mudanças
-cd /opt/novusio/app
-git pull origin main
-
-# Executar deploy
-sudo -u novusio ./instalador/deploy.sh
+./menu.sh
+# Escolher opção 2: Atualizar Projeto
 ```
 
-### Atualizar sistema
+### Atualizar Sistema
 
 ```bash
-# Atualizar sistema operacional
-sudo apt update && sudo apt upgrade -y
-
-# Renovar certificados SSL
-sudo certbot renew
+sudo apt update && sudo apt upgrade
 ```
 
-## 🆘 Solução de problemas
+## 🛠️ Solução de Problemas
 
-### Aplicação não inicia
+### Serviço não inicia
 
 ```bash
+# Verificar status
+sudo systemctl status novusio
+
 # Verificar logs
-sudo journalctl -u novusio -f
+sudo journalctl -u novusio -n 50
 
+# Reiniciar
+sudo systemctl restart novusio
+```
+
+### Nginx com problemas
+
+```bash
 # Verificar configuração
 sudo nginx -t
 
-# Verificar permissões
-sudo chown -R novusio:novusio /opt/novusio
+# Recarregar
+sudo systemctl reload nginx
 ```
 
 ### SSL não funciona
@@ -210,43 +197,87 @@ sudo chown -R novusio:novusio /opt/novusio
 # Verificar certificados
 sudo certbot certificates
 
-# Testar renovação
-sudo certbot renew --dry-run
-
-# Verificar Nginx
-sudo nginx -t
+# Renovar
+sudo certbot renew
 ```
 
-### Problemas de permissão
+### Banco de dados
 
 ```bash
-# Corrigir permissões
-sudo chown -R novusio:novusio /opt/novusio
-sudo chmod -R 755 /opt/novusio
-sudo chmod 600 /opt/novusio/.env
+# Verificar arquivo
+ls -la /home/usuario/site-novusio/database.sqlite
+
+# Reinicializar
+cd /home/usuario/site-novusio
+npm run init-db
+```
+
+## 📊 Monitoramento
+
+### Verificação Completa
+
+```bash
+./verificar-sistema.sh
+```
+
+### Logs Importantes
+
+```bash
+# Logs da aplicação
+sudo journalctl -u novusio -f
+
+# Logs do Nginx
+sudo tail -f /var/log/nginx/novusio_error.log
+
+# Logs do sistema
+sudo tail -f /var/log/syslog
 ```
 
 ## 📞 Suporte
 
-Para problemas técnicos:
+### Informações do Sistema
 
-1. Verificar logs: `sudo journalctl -u novusio -f`
-2. Verificar status: `sudo systemctl status novusio nginx`
-3. Verificar SSL: `sudo certbot certificates`
-4. Contatar: suporte@novusiopy.com
+```bash
+# Status completo
+sudo systemctl status novusio nginx fail2ban
 
-## 🎯 Checklist de deploy
+# Verificação detalhada
+./verificar-sistema.sh > sistema.log
+```
 
-- [ ] Servidor Ubuntu 20.04+ configurado
-- [ ] Domínio apontando para o servidor
-- [ ] Arquivos da aplicação enviados
-- [ ] Script de instalação executado
-- [ ] Arquivo .env configurado
-- [ ] SSL configurado
-- [ ] Aplicação iniciada e funcionando
-- [ ] Backup automático funcionando
-- [ ] Monitoramento configurado
+### Logs para Suporte
+
+```bash
+# Coletar logs
+sudo journalctl -u novusio --since "1 hour ago" > logs_servico.txt
+sudo tail -100 /var/log/nginx/novusio_error.log > logs_nginx.txt
+./verificar-sistema.sh > status_sistema.txt
+```
+
+## ✅ Checklist Pós-Instalação
+
+- [ ] Site acessível via HTTPS
+- [ ] Painel admin funcionando
+- [ ] API respondendo
+- [ ] SSL configurado corretamente
+- [ ] Firewall ativo
+- [ ] Backup funcionando
+- [ ] Logs sendo gerados
+- [ ] Credenciais alteradas
+
+## 🎉 Concluído!
+
+Seu site está rodando em produção com:
+
+- ✅ Instalação automatizada
+- ✅ SSL/TLS configurado
+- ✅ Firewall e segurança
+- ✅ Backup automático
+- ✅ Monitoramento
+- ✅ Documentação completa
+
+**Acesse seu site**: `https://seu-dominio.com`
 
 ---
 
-**Desenvolvido com ❤️ para Novusio Paraguay 🇵🇾**
+**Desenvolvido com ❤️ para Novusio Paraguay**
