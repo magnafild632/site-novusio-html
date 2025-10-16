@@ -46,3 +46,4 @@ echo "  3. Verificar .env: cat /opt/novusio/.env"
 echo "  4. Reinicializar DB: cd /opt/novusio && sudo -u novusio npm run init-db"
 
 
+
