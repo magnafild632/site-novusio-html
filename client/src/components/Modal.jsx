@@ -11,8 +11,14 @@ const Modal = ({ title, children, onClose }) => {
   }, [onClose]);
 
   return (
-    <div className="modal" onClick={onClose}>
-      <div className="modal-content" onClick={e => e.stopPropagation()}>
+    <div
+      className="modal"
+      onMouseDown={e => {
+        // Fecha apenas se o clique for diretamente no backdrop
+        if (e.target === e.currentTarget) onClose();
+      }}
+    >
+      <div className="modal-content" onMouseDown={e => e.stopPropagation()}>
         <div className="modal-header">
           <h2>{title}</h2>
           <button className="close-modal" onClick={onClose}>

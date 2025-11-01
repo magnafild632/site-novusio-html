@@ -144,6 +144,13 @@ const SlideModal = ({ slide, onClose, onSubmit }) => {
   const handleImageChange = e => {
     const file = e.target.files?.[0];
     if (file) {
+      // Verificar tamanho do arquivo (50MB = 50 * 1024 * 1024 bytes)
+      const maxSize = 50 * 1024 * 1024; // 50MB
+      if (file.size > maxSize) {
+        alert('O arquivo é muito grande. O tamanho máximo permitido é 50MB.');
+        return;
+      }
+      
       setImageFile(file);
       const reader = new FileReader();
       reader.onload = e => setPreview(e.target?.result);
@@ -176,7 +183,7 @@ const SlideModal = ({ slide, onClose, onSubmit }) => {
             type="text"
             value={formData.title}
             onChange={e => setFormData({ ...formData, title: e.target.value })}
-            required
+            placeholder="Opcional"
           />
         </div>
 
@@ -188,7 +195,7 @@ const SlideModal = ({ slide, onClose, onSubmit }) => {
             onChange={e =>
               setFormData({ ...formData, subtitle: e.target.value })
             }
-            required
+            placeholder="Opcional"
           />
         </div>
 

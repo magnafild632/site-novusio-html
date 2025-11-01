@@ -57,37 +57,43 @@ router.get('/:id', (req, res) => {
 
 // Criar slide (protegido)
 router.post('/', authMiddleware, upload.single('image'), (req, res) => {
+  console.log('📁 Slide upload request:', {
+    hasFile: !!req.file,
+    fileSize: req.file?.size,
+    fileMimetype: req.file?.mimetype,
+    fileName: req.file?.originalname,
+    body: req.body
+  });
+
   const { title, subtitle, order_position, active } = req.body;
 
-  if (!title || !subtitle) {
-    return res.status(400).json({
-      success: false,
-      message: 'Título e subtítulo são obrigatórios',
-    });
-  }
-
-  const image_url = req.file ? `/uploads/${req.file.filename}` : '';
-
-  if (!image_url && !req.body.image_url) {
+  if (!req.file && !req.body.image_url) {
     return res.status(400).json({
       success: false,
       message: 'Imagem é obrigatória',
     });
   }
 
-  const finalImageUrl = image_url || req.body.image_url;
+  // Se tem arquivo, salvar no banco; senão, usar URL externa
+  const image_url = req.body.image_url || null;
+  const image_data = req.file ? req.file.buffer : null;
+  const image_mimetype = req.file ? req.file.mimetype : null;
+  const image_filename = req.file ? req.file.originalname : null;
 
   const query = `
-    INSERT INTO hero_slides (title, subtitle, image_url, order_position, active)
-    VALUES (?, ?, ?, ?, ?)
+    INSERT INTO hero_slides (title, subtitle, image_url, image_data, image_mimetype, image_filename, order_position, active)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
   `;
 
   db.run(
     query,
     [
-      title,
-      subtitle,
-      finalImageUrl,
+      title ?? '',
+      subtitle ?? '',
+      image_url,
+      image_data,
+      image_mimetype,
+      image_filename,
       order_position || 0,
       active !== undefined ? active : 1,
     ],
@@ -104,9 +110,9 @@ router.post('/', authMiddleware, upload.single('image'), (req, res) => {
         message: 'Slide criado com sucesso',
         data: {
           id: this.lastID,
-          title,
-          subtitle,
-          image_url: finalImageUrl,
+          title: title ?? '',
+          subtitle: subtitle ?? '',
+          image_url: image_url || `/api/slides/${this.lastID}/image`,
           order_position: order_position || 0,
           active: active !== undefined ? active : 1,
         },
@@ -118,9 +124,6 @@ router.post('/', authMiddleware, upload.single('image'), (req, res) => {
 // Atualizar slide (protegido)
 router.put('/:id', authMiddleware, upload.single('image'), (req, res) => {
   const { title, subtitle, order_position, active } = req.body;
-  const image_url = req.file
-    ? `/uploads/${req.file.filename}`
-    : req.body.image_url;
 
   // Verificar se o slide existe
   db.get(
@@ -134,18 +137,27 @@ router.put('/:id', authMiddleware, upload.single('image'), (req, res) => {
         });
       }
 
+      // Preparar dados para atualização
+      const image_url = req.body.image_url || slide.image_url;
+      const image_data = req.file ? req.file.buffer : slide.image_data;
+      const image_mimetype = req.file ? req.file.mimetype : slide.image_mimetype;
+      const image_filename = req.file ? req.file.originalname : slide.image_filename;
+
       const query = `
       UPDATE hero_slides 
-      SET title = ?, subtitle = ?, image_url = ?, order_position = ?, active = ?
+      SET title = ?, subtitle = ?, image_url = ?, image_data = ?, image_mimetype = ?, image_filename = ?, order_position = ?, active = ?
       WHERE id = ?
     `;
 
       db.run(
         query,
         [
-          title || slide.title,
-          subtitle || slide.subtitle,
-          image_url || slide.image_url,
+          title !== undefined ? title : slide.title,
+          subtitle !== undefined ? subtitle : slide.subtitle,
+          image_url,
+          image_data,
+          image_mimetype,
+          image_filename,
           order_position !== undefined ? order_position : slide.order_position,
           active !== undefined ? active : slide.active,
           req.params.id,
@@ -192,6 +204,30 @@ router.delete('/:id', authMiddleware, (req, res) => {
         success: true,
         message: 'Slide deletado com sucesso',
       });
+    },
+  );
+});
+
+// Servir imagem do slide (público)
+router.get('/:id/image', (req, res) => {
+  db.get(
+    'SELECT image_data, image_mimetype, image_filename FROM hero_slides WHERE id = ? AND active = 1',
+    [req.params.id],
+    (err, row) => {
+      if (err || !row || !row.image_data) {
+        return res.status(404).json({
+          success: false,
+          message: 'Imagem não encontrada',
+        });
+      }
+
+      res.set({
+        'Content-Type': row.image_mimetype || 'image/png',
+        'Content-Disposition': `inline; filename="${row.image_filename || 'image.png'}"`,
+        'Cache-Control': 'public, max-age=31536000', // 1 ano
+      });
+
+      res.send(row.image_data);
     },
   );
 });

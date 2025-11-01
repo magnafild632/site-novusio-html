@@ -141,6 +141,13 @@ const ClientModal = ({ client, onClose, onSubmit }) => {
   const handleLogoChange = e => {
     const file = e.target.files?.[0];
     if (file) {
+      // Verificar tamanho do arquivo (50MB = 50 * 1024 * 1024 bytes)
+      const maxSize = 50 * 1024 * 1024; // 50MB
+      if (file.size > maxSize) {
+        alert('O arquivo é muito grande. O tamanho máximo permitido é 50MB.');
+        return;
+      }
+      
       setLogoFile(file);
       const reader = new FileReader();
       reader.onload = e => setPreview(e.target?.result);

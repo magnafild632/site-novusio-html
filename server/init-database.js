@@ -74,7 +74,10 @@ db.serialize(() => {
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       title TEXT NOT NULL,
       subtitle TEXT NOT NULL,
-      image_url TEXT NOT NULL,
+      image_url TEXT,
+      image_data BLOB,
+      image_mimetype TEXT,
+      image_filename TEXT,
       order_position INTEGER DEFAULT 0,
       active INTEGER DEFAULT 1,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
@@ -106,7 +109,10 @@ db.serialize(() => {
     `CREATE TABLE IF NOT EXISTS portfolio_clients (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       name TEXT NOT NULL,
-      logo_url TEXT NOT NULL,
+      logo_url TEXT,
+      logo_data BLOB,
+      logo_mimetype TEXT,
+      logo_filename TEXT,
       order_position INTEGER DEFAULT 0,
       active INTEGER DEFAULT 1,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
